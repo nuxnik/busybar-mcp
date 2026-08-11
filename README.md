@@ -1,6 +1,6 @@
 # Busy Bar MCP Server
 
-A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **busybar_python_sdk** to communicate with a physical [Busy Bar](https://busybar.co.uk/) device over HTTP. The Busy Bar is a digital queue-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
+A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
 > **Status:** 13 MCP tools are fully implemented across account retrieval, system information, and time categories. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
 
@@ -21,7 +21,7 @@ This creates a virtual environment and installs all packages declared in `pyproj
 
 ## Configuration
 
-Copy the example `.env.example` file (if present) or create your own `.env` at the project root with the following variables:
+Copy the example `.env.example` file (if present) to create your own `.env` at the project root with the following variables.
 
 | Variable | Description | Example |
 |---|---|---|
@@ -31,6 +31,11 @@ Copy the example `.env.example` file (if present) or create your own `.env` at t
 ```env
 BUSYBAR_API_TOKEN=my-super-secret-token
 BUSYBAR_BASE_URL=10.0.4.20
+```
+
+It is also possible to declare the variables before starting the server:
+```env
+export BUSYBAR_API_TOKEN=my-super-secret-token && export BUSYBAR_BASE_URL=10.0.4.20 
 ```
 
 ## Usage
@@ -47,7 +52,7 @@ Or run it standalone:
 uv run server.py           # running the MCP server directly via uv
 ```
 
-Once started, clients can connect to the server over stdio using their MCP transport.
+Once started, clients can connect to the server using their MCP transport.
 
 ## MCP Tools
 
