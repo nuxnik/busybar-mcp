@@ -1,0 +1,10 @@
+[project]
+name = "busybar-mcp"
+version = "0.1.0"
+description = "An MCP server for the busy bar"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "busybar_python_sdk @ git+https://github.com/nuxnik/busybar-python-sdk.git@v25.0.0",
+    "mcp[cli]>=2.0.0",
+]

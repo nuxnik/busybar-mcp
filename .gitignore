@@ -1,0 +1,9 @@
+*$py.class
+*.py[cod]
+.env
+.opencode
+AGENTS.md
+__pycache__
+__pycache__/
+openspec
+tags
