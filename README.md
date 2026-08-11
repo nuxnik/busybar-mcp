@@ -2,7 +2,7 @@
 
 A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
-> **Status:** 13 MCP tools are fully implemented across account retrieval, system information, and time categories. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
+> **Status:** 13 MCP tools are fully implemented across account retrieval, system information, and time categories, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
 
 ## Prerequisites
 
@@ -102,12 +102,39 @@ The project follows a thin-client layering:
                                  (internal lib)
 ```
 
+## Testing
+
+A working test suite is included with the project. The convenience runner at `run_tests.py` invokes pytest against the `tests/` directory with sensible defaults and no-header output.
+
+### Run basic tests
+
+```sh
+python run_tests.py
+```
+
+### Run with coverage output
+
+```sh
+COVERAGE=1 python run_tests.py
+```
+
+Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`).
+
+### Test Coverage Summary
+
+- **13 MCP tools** tested — one parametrized happy-path test per tool across account, system info, and time categories.
+- **Error-path tests** verify behaviour when the Busy Bar device is missing or unreachable (mocked HTTP failures).
+- **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
+- **conftest fixtures**:
+  - `mock_api_client` — patches `server._make_api` to return a mock client with all stubbed API methods, so no real HTTP requests are made.
+  - `clear_env_vars` — temporarily removes `BUSYBAR_BASE_URL` and `BUSYBAR_API_TOKEN` from `os.environ` (restoring originals afterward).
+
 ## What's Next
 
 - Extend with write/mutation tools (display messages, notifications)
 - Implement MCP resources for live device data streams
 - Configure linting and formatting toolchain
-- Add test coverage
+
 
 ---
 

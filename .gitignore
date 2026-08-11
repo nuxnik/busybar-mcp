@@ -1,6 +1,7 @@
 *$py.class
 *.py[cod]
 .env
+.coverage
 .opencode
 AGENTS.md
 __pycache__

@@ -8,3 +8,9 @@ dependencies = [
     "busybar_python_sdk @ git+https://github.com/nuxnik/busybar-python-sdk.git@v25.0.0",
     "mcp[cli]>=2.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+]
