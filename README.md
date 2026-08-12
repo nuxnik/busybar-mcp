@@ -110,19 +110,30 @@ Once started, clients can connect to the server using their MCP transport.
 
 The project follows a thin-client layering:
 
-1. **server.py** — single-file MCP server that declares tools/resources via FastMCP
-2. **busybar_python_sdk** — Python SDK (Git dependency) that encapsulates all Busy Bar API logic
-3. **HTTP → Busy Bar device** — the SDK communicates with the device over HTTP using the OpenAPI schema defined in `openapi.yaml`
+1. **server.py** — thin bootstrap (``< 30 lines``): loads ``.env``, imports all tool modules from the `_busybar_mcp/` package, calls ``server.run()``
+2. **busybar_mcp/packages/** — modularized MCP tools organized by Busy Bar API namespace:
 
 ```
-┌─────────────┐     MCP/stdio      ┌──────────────────┐     SDK calls     ┌──────────────┐
-│  MCP Client │ ◄────────────────► │ server.py        │                  │ Busy Bar     │
-│  (AI tool)  │   FastMCP tools    │ (FastMCP binding)│                  │ Device       │
-└─────────────┘                    └──────────────────┘ ◄────────────────► └──────────────┘
-                                      │                              HTTP (OpenAPI)
-                                busybar_python_sdk
-                                 (internal lib)
+┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐     SDK calls     ┌──────────────┐
+│           MCP Client         │ ◄──────────────────► │ server.py        │                  │ Busy Bar     │
+│         (AI tool)            │   FastMCP tools      │ (bootstrap only) │ ◄────────────────► │ Device       │
+└───────────────────────────────┘                      └──────────────────┘                    └──────────────┘
+                              busybar_mcp/  (package with 10 namespace modules + utils)   HTTP (OpenAPI)
+                                                                                          busybar_python_sdk
 ```
+
+- ``busybar_mcp/account.py`` — account retrieval tools
+- ``busybar_mcp/system.py`` — system information tools
+- ``busybar_mcp/time.py`` — time operations tools
+- ``busybar_mcp/ble.py`` — BLE module tools
+- ``busybar_mcp/busy.py`` — busy timer tools
+- ``busybar_mcp/settings.py`` — device settings tools
+- ``busybar_mcp/smarthome.py`` — smart home tools
+- ``busybar_mcp/storage.py`` — storage management tools
+- ``busybar_mcp/updater.py`` — firmware update tools
+- ``busybar_mcp/wifi.py`` — Wi-Fi status tools
+- ``busybar_mcp/utils.py`` — shared utilities (`_serialize`, `_wrap_tool_error`)
+3. **HTTP → Busy Bar device** — the SDK communicates with the device over HTTP using the OpenAPI schema defined in `openapi.yaml`
 
 ## Testing
 
@@ -145,19 +156,15 @@ Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`)
 ### Test Coverage Summary
 
 - **28 MCP tools** tested — one parametrized happy-path test per tool across account, system info, time, BLE, busy timer, settings, smart home, storage, update, and wifi categories.
+  - Per-module test files: ``tests/test_account.py``, ``tests/test_system.py``, ``tests/test_time.py``, ``tests/test_ble.py``, ``tests/test_busy.py``, ``tests/test_settings.py``, ``tests/test_smarthome.py``, ``tests/test_storage.py``, ``tests/test_updater.py``, ``tests/test_wifi.py``
 - **Error-path tests** verify behaviour when the Busy Bar device is missing or unreachable (mocked HTTP failures).
 - **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
 - **conftest fixtures**:
-  - `mock_api_client` — patches `server._make_api` to return a mock client with all stubbed API methods, so no real HTTP requests are made.
   - `clear_env_vars` — temporarily removes `BUSYBAR_BASE_URL` and `BUSYBAR_API_TOKEN` from `os.environ` (restoring originals afterward).
+- **Serialization tests** (`tests/test_serialization.py`) verify `_serialize()` handles SDK models, dicts, lists, scalars, and edge cases correctly.
 
 ## What's Next
 
 - Extend with write/mutation tools (display messages, notifications)
 - Implement MCP resources for live device data streams
 - Configure linting and formatting toolchain
-
-
----
-
-*Project status: 28 MCP tools implemented across account, system info, time, device state, and configuration endpoints.*
