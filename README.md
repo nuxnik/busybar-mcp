@@ -1,5 +1,7 @@
 # Busy Bar MCP Server
 
+**NOTE: This project is still a work in progress**
+
 A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
 > **Status:** 13 MCP tools are fully implemented across account retrieval, system information, and time categories, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
