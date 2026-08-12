@@ -9,9 +9,16 @@ from mcp.types import CallToolResult
 
 from busybar_python_sdk import (
     AccountApi,
+    BLEApi,
+    BusyApi,
     Configuration,
+    SettingsApi,
+    SmartHomeApi,
+    StorageApi,
     SystemApi,
     TimeApi,
+    UpdaterApi,
+    WiFiApi,
 )
 from busybar_python_sdk.api_client import ApiClient
 
@@ -395,6 +402,404 @@ def get_tzlist():
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get timezone list: {e}")
+
+
+# ---------------------------------------------------------------------------
+# BLE endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_ble_status")
+def get_ble_status():
+    """Retrieve BLE module status from the Busy Bar device.
+
+    This tool queries GET /api/ble/status via `BLEApi.get_ble_status()` to return
+    the current Bluetooth Low Energy module state.
+
+    Returns a BleStatusResponse object containing:
+        - status (str): Current BLE status string (e.g., "powered_on", "powered_off")
+        - address (str | null): BLE MAC address if available
+
+    Use case:
+        Verify the BLE module is powered on and has a valid address before attempting
+        Bluetooth operations like smart home pairing or device discovery.
+    """
+    try:
+        api = _make_api(BLEApi)
+        result = api.api_ble_status_get()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get BLE status: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Busy Timer endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_busy_snapshot")
+def get_busy_snapshot():
+    """Retrieve the current BUSY timer snapshot from the Busy Bar device.
+
+    This tool queries GET /api/busy/snapshot via `BusyApi.get_busy_snapshot()` to
+    return the current BUSY timer state including active profile and timing details.
+
+    Returns a BusySnapshot object containing:
+        - snapshot (BusySnapshotSnapshot): The busy snapshot data — varies by type:
+            - BusySnapshotSimple: started (bool), remaining_ms (int)
+            - BusySnapshotInterval: started, remaining_ms, interval_index, intervals_count
+            - BusySnapshotInfinite: started (bool)
+            - BusySnapshotNotStarted: fields not applicable
+        - snapshot_timestamp_ms (int): Timestamp of the snapshot in milliseconds since epoch
+
+    Use case:
+        Check what BUSY timer profile is currently active and how much time remains
+        before scheduling display messages or other operations around the timer.
+    """
+    try:
+        api = _make_api(BusyApi)
+        result = api.get_busy_snapshot()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get busy snapshot: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Settings GET endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_http_access")
+def get_http_access():
+    """Retrieve HTTP access configuration from the Busy Bar device.
+
+    This tool queries GET /api/access via `SettingsApi.get_http_access()` to obtain
+    the current HTTP API key management mode and validity state.
+
+    Returns an HttpAccessInfo object containing:
+        - mode (str): HTTP access mode — one of "default", "custom_key", or "disabled"
+        - key_valid (bool): Whether the configured key is currently valid
+
+    Use case:
+        Inspect HTTP access configuration before deploying tools that rely on the device's
+        HTTP API (e.g., remote messaging) to confirm the key setup is correct.
+    """
+    try:
+        api = _make_api(SettingsApi)
+        result = api.get_http_access()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get HTTP access settings: {e}")
+
+
+@server.tool(name="get_device_name")
+def get_device_name():
+    """Retrieve the device name configured on the Busy Bar device.
+
+    This tool queries GET /api/name via `SettingsApi.get_name()` to obtain
+    the human-readable name currently set for this unit.
+
+    Returns a NameInfo object containing:
+        - name (str): The device name (e.g., "My Busy Bar")
+
+    Use case:
+        Confirm or audit the display name shown on the device, especially useful in
+        multi-device setups where each unit needs an identifiable label.
+    """
+    try:
+        api = _make_api(SettingsApi)
+        result = api.api_name_get()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get device name: {e}")
+
+
+@server.tool(name="get_display_brightness")
+def get_display_brightness():
+    """Retrieve the display brightness setting from the Busy Bar device.
+
+    This tool queries GET /api/display/brightness via `SettingsApi.get_display_brightness()`
+    to obtain the current screen brightness level.
+
+    Returns a DisplayBrightnessInfo object containing:
+        - value (int): Brightness level as an integer percentage or stepped value
+
+    Use case:
+        Check brightness before adjusting display behavior, or audit settings during
+        device configuration management.
+    """
+    try:
+        api = _make_api(SettingsApi)
+        result = api.get_display_brightness()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get display brightness: {e}")
+
+
+@server.tool(name="get_audio_volume")
+def get_audio_volume():
+    """Retrieve the audio volume setting from the Busy Bar device.
+
+    This tool queries GET /api/audio/volume via `SettingsApi.get_audio_volume()`
+    to obtain the current volume level configuration.
+
+    Returns an AudioVolumeInfo object containing:
+        - volume (int): Volume level as an integer value
+
+    Use case:
+        Check or audit volume settings before playing audio notifications or tones;
+        useful for confirming device is configured at an audible level.
+    """
+    try:
+        api = _make_api(SettingsApi)
+        result = api.get_audio_volume()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get audio volume: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Smart Home endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_smart_home_pairing_status")
+def get_smart_home_pairing_status():
+    """Retrieve smart home commissioning (pairing) status from the Busy Bar device.
+
+    This tool queries GET /api/smart_home/pairing via `SmartHomeApi.get_smart_home_commissioning_status()`
+    to learn how many Matter fabric entries exist and the latest pairing outcome.
+
+    Returns a SmartHomePairingInfo object containing:
+        - fabric_count (int): Number of commissioned Matter fabrics
+        - latest_pairing_status (str | null): Status of the most recent pairing attempt
+            (e.g., "success", "failure", or null if no attempt yet)
+
+    Use case:
+        Verify smart home device commissioning state before troubleshooting connectivity,
+        confirming pairings, or starting a new setup flow.
+    """
+    try:
+        api = _make_api(SmartHomeApi)
+        result = api.get_smart_home_commissioning_status()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get smart home pairing status: {e}")
+
+
+@server.tool(name="get_smart_home_switch_state")
+def get_smart_home_switch_state():
+    """Retrieve smart home switch (output) state from the Busy Bar device.
+
+    This tool queries GET /api/smart_home/switch via `SmartHomeApi.get_smart_home_switch_state()`
+    to read the current relay/driver output configuration.
+
+    Returns a SmartHomeSwitchState object containing:
+        - state (str): Current switch/output state (e.g., "on", "off")
+        - startup (str | null): Startup behavior — what the switch does on power-on
+            (e.g., "restore", "on", "off", "unknown")
+
+    Use case:
+        Check whether a smart home relay is currently active or inspect its configured
+        startup behavior to avoid unexpected device activation after power events.
+    """
+    try:
+        api = _make_api(SmartHomeApi)
+        result = api.api_smart_home_switch_get()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get smart home switch state: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Storage endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="list_storage_files")
+def list_storage_files(path: str = "/"):
+    """List files and directories stored on the Busy Bar device at a given path.
+
+    This tool calls `StorageApi.list_storage_files(path)` to enumerate the directory
+    contents on the device's internal storage for the specified path.
+
+    Args:
+        path: The directory path to list (e.g., "/", "/photos"). Defaults to "/".
+
+    Returns a StorageList object containing:
+        - A list of StorageListElement objects, each with:
+            - type (str): File type — "file" or "dir"
+            - name (str): Name of the file or directory
+
+    Use case:
+        Browse device storage to find files before uploading, downloading, or managing
+        media assets for display on the Busy Bar unit.
+    """
+    try:
+        api = _make_api(StorageApi)
+        result = api.list_storage_files(path=path)
+        return CallToolResult(content=[{"type": "text", "text": str(_serialize(result))}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to list storage files at {path!r}: {e}")
+
+
+@server.tool(name="get_storage_status")
+def get_storage_status():
+    """Retrieve storage capacity information from the Busy Bar device.
+
+    This tool queries GET /api/storage/status via `StorageApi.get_storage_status()`
+    to learn current flash storage usage and available space.
+
+    Returns a StorageStatus object containing:
+        - used_bytes (int): Bytes currently used on the device storage
+        - free_bytes (int): Bytes available for writing
+        - total_bytes (int): Total capacity of the storage
+
+    Use case:
+        Check available storage before uploading files or media to confirm there is
+        sufficient space, and monitor storage consumption over time.
+    """
+    try:
+        api = _make_api(StorageApi)
+        result = api.get_storage_status()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get storage status: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Update endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_firmware_update_status")
+def get_firmware_update_status():
+    """Retrieve firmware update state from the Busy Bar device.
+
+    This tool queries GET /api/update/status via `UpdaterApi.get_firmware_update_status()`
+    to learn about the current and pending firmware states.
+
+    Returns an UpdateStatus object containing:
+        - install (UpdateStatusInstall): The currently installed firmware info — version, etc.
+        - check (UpdateStatusCheck): Status of the latest automatic or manual update check
+
+    Use case:
+        Verify which firmware is running and whether a new update has been detected but
+        not yet installed — useful for maintenance and rollout planning.
+    """
+    try:
+        api = _make_api(UpdaterApi)
+        result = api.get_firmware_update_status()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get firmware update status: {e}")
+
+
+@server.tool(name="get_update_changelog")
+def get_update_changelog(version: str):
+    """Retrieve the changelog for a specific firmware version from the Busy Bar device.
+
+    This tool queries GET /api/update/changelog via `UpdaterApi.get_update_changelog(version)`
+    to obtain release notes and change details for the given firmware version.
+
+    Args:
+        version: The firmware version string to fetch the changelog for (e.g., "1.0.0").
+
+    Returns a GetUpdateChangelog200Response object containing:
+        - changelog (str): Human-readable release notes and change log text
+
+    Use case:
+        Review what changed in a specific firmware revision before deploying updates,
+        or compare versions to understand new features and bug fixes.
+    """
+    try:
+        api = _make_api(UpdaterApi)
+        result = api.get_update_changelog(version=version)
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get changelog for version {version!r}: {e}")
+
+
+@server.tool(name="get_autoupdate_settings")
+def get_autoupdate_settings():
+    """Retrieve automatic firmware update settings from the Busy Bar device.
+
+    This tool queries GET /api/update/autoupdate via `UpdaterApi.get_autoupdate_settings()`
+    to obtain the current autoupdate configuration.
+
+    Returns an AutoupdateSettings object containing:
+        - is_enabled (bool): Whether automatic updates are enabled
+        - interval_start (str): Start of the update window (e.g., "02:00")
+        - interval_end (str): End of the update window (e.g., "04:00")
+
+    Use case:
+        Confirm when or whether firmware updates happen automatically, to avoid unexpected
+        reboots during active usage or schedule maintenance around the update window.
+    """
+    try:
+        api = _make_api(UpdaterApi)
+        result = api.get_autoupdate_settings()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get autoupdate settings: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Wi-Fi endpoints
+# ---------------------------------------------------------------------------
+
+
+@server.tool(name="get_wifi_status")
+def get_wifi_status():
+    """Retrieve Wi-Fi connection status from the Busy Bar device.
+
+    This tool queries GET /api/wifi/status via `WiFiApi.api_wifi_status_get()` to obtain
+    the current network connection details on the Wi-Fi interface.
+
+    Returns a StatusResponse object containing:
+        - state (str): Connection state — e.g., "connected", "disconnected"
+        - ssid (str | null): SSID of the connected access point
+        - bssid (str | null): MAC address of the connected access point
+        - channel (int): Wi-Fi channel number (e.g., 1, 6, 36)
+        - rssi (int): Received signal strength indicator in dBm (negative value)
+        - security (str): Security type — e.g., "open", "wpa2", "wpa3"
+        - ip_config (StatusResponseIpConfig): IP configuration including:
+            - method (WifiIpType): How the IP was obtained ("dhcp" or "static")
+
+    Use case:
+        Diagnostics for network troubleshooting — verify SSID, signal strength, security
+        type, and IP assignment before debugging connectivity issues.
+    """
+    try:
+        api = _make_api(WiFiApi)
+        result = api.api_wifi_status_get()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get Wi-Fi status: {e}")
+
+
+@server.tool(name="get_wifi_networks")
+def get_wifi_networks():
+    """Retrieve currently scanned Wi-Fi networks from the Busy Bar device.
+
+    This tool queries GET /api/wifi/networks via `WiFiApi.get_wifi_networks()` to obtain
+    the latest scan results of available wireless access points in range.
+
+    Returns a NetworkResponse object containing:
+        - count (int): Number of networks found in the scan
+        - networks (list[Network]): Array of network entries, each with SSID, BSSID, RSSI,
+          channel, security method, and frequency band information
+
+    Use case:
+        Browse available Wi-Fi networks before switching the Busy Bar to a different
+        access point or confirming signal quality at a new location.
+    """
+    try:
+        api = _make_api(WiFiApi)
+        result = api.get_wifi_networks()
+        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+    except Exception as e:
+        return _wrap_tool_error(f"Failed to get Wi-Fi networks: {e}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 
 A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
-> **Status:** 13 MCP tools are fully implemented across account retrieval, system information, and time categories, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
+> **Status:** 28 MCP tools are fully implemented across account retrieval, system information, time operations, and device state queries, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
 
 ## Prerequisites
 
@@ -86,6 +86,26 @@ Once started, clients can connect to the server using their MCP transport.
 | `get_timezone` | Get the currently configured timezone (name, offset, abbreviation) |
 | `get_tzlist` | List all supported timezones available for configuration |
 
+### Device Status & Configuration
+
+| Tool | Description |
+|---|---|
+| `get_ble_status` | Retrieve BLE module status (powered state, MAC address) |
+| `get_busy_snapshot` | Get the current BUSY timer state including profile and timing details |
+| `get_http_access` | Inspect HTTP API key management mode and validity |
+| `get_device_name` | Get the human-readable device name |
+| `get_display_brightness` | Retrieve the current display brightness level |
+| `get_audio_volume` | Retrieve the current audio volume level |
+| `get_smart_home_pairing_status` | Query Matter fabric count and latest commissioning outcome |
+| `get_smart_home_switch_state` | Read smart home relay/output state and startup behavior |
+| `list_storage_files` | List files and directories on device storage (accepts optional path argument) |
+| `get_storage_status` | Get storage capacity details (used, free, total bytes) |
+| `get_firmware_update_status` | Check currently installed firmware and pending update state |
+| `get_update_changelog` | Retrieve release notes for a specific firmware version (accepts required version argument) |
+| `get_autoupdate_settings` | Get automatic update configuration (enabled, window start/end) |
+| `get_wifi_status` | Get Wi-Fi connection details (SSID, signal strength, channel, security) |
+| `get_wifi_networks` | Retrieve scanned available Wi-Fi networks in range |
+
 ## Architecture
 
 The project follows a thin-client layering:
@@ -124,7 +144,7 @@ Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`)
 
 ### Test Coverage Summary
 
-- **13 MCP tools** tested — one parametrized happy-path test per tool across account, system info, and time categories.
+- **28 MCP tools** tested — one parametrized happy-path test per tool across account, system info, time, BLE, busy timer, settings, smart home, storage, update, and wifi categories.
 - **Error-path tests** verify behaviour when the Busy Bar device is missing or unreachable (mocked HTTP failures).
 - **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
 - **conftest fixtures**:
@@ -140,4 +160,4 @@ Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`)
 
 ---
 
-*Project status: 13 MCP tools implemented across account, system info, and time endpoints.*
+*Project status: 28 MCP tools implemented across account, system info, time, device state, and configuration endpoints.*

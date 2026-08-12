@@ -41,6 +41,35 @@ def mock_api_client():
         mock_client.get_time_timezone.return_value = _make_mock_model()
         mock_client.get_time_tzlist.return_value = _make_mock_model()
 
+        # BLE API stubs
+        mock_client.api_ble_status_get.return_value = _make_mock_model()
+
+        # Busy API stubs
+        mock_client.get_busy_snapshot.return_value = _make_mock_model()
+
+        # Settings API stubs
+        mock_client.get_http_access.return_value = _make_mock_model()
+        mock_client.api_name_get.return_value = _make_mock_model()
+        mock_client.get_display_brightness.return_value = _make_mock_model()
+        mock_client.get_audio_volume.return_value = _make_mock_model()
+
+        # Smart Home API stubs
+        mock_client.get_smart_home_commissioning_status.return_value = _make_mock_model()
+        mock_client.api_smart_home_switch_get.return_value = _make_mock_model()
+
+        # Storage API stubs
+        mock_client.list_storage_files.return_value = _make_mock_model()
+        mock_client.get_storage_status.return_value = _make_mock_model()
+
+        # Updater API stubs
+        mock_client.get_firmware_update_status.return_value = _make_mock_model()
+        mock_client.get_update_changelog.return_value = _make_mock_model()
+        mock_client.get_autoupdate_settings.return_value = _make_mock_model()
+
+        # Wi-Fi API stubs
+        mock_client.api_wifi_status_get.return_value = _make_mock_model()
+        mock_client.get_wifi_networks.return_value = _make_mock_model()
+
         mock_make_api.return_value = mock_client
         yield mock_make_api, mock_client
 
