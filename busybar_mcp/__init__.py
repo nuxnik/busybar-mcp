@@ -21,3 +21,12 @@ import busybar_mcp.system   # noqa: F401
 import busybar_mcp.time     # noqa: F401
 import busybar_mcp.updater  # noqa: F401
 import busybar_mcp.wifi     # noqa: F401
+
+
+def main() -> None:
+    """Console entry point: load ``.env`` and run the MCP server over stdio."""
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    server.run(transport="stdio")

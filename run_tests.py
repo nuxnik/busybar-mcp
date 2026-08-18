@@ -22,10 +22,10 @@ def main():
     ]
 
     if os.environ.get("COVERAGE") == "1":
-        # Coverage target: mcp is a namespace-like alias, server.py is the real module
+        # Coverage target: the busybar_mcp package (root module is busybar_mcp/__init__.py)
         args.extend([
             "-v",
-            "--cov=server",
+            "--cov=busybar_mcp",
             "--cov-report=term-missing",
         ])
 

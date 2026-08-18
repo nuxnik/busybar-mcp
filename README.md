@@ -1,7 +1,5 @@
 # Busy Bar MCP Server
 
-**NOTE: This project is still a work in progress**
-
 A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server provides 32 tools for account retrieval, system information, time operations, BLE control, and input events, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
 > **Status:** 32 MCP tools are fully implemented across account retrieval, system information, time operations, device state queries, BLE control, and input events, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
@@ -42,17 +40,22 @@ export BUSYBAR_API_TOKEN=my-super-secret-token && export BUSYBAR_BASE_URL=10.0.4
 
 ## Usage
 
-Start the MCP server for development:
+Set the `BUSYBAR_API_TOKEN` and `BUSYBAR_BASE_URL` environment variables (or place them in a `.env` file in the working directory), then start the MCP server:
 
 ```sh
-mcp dev server.py          # built-in MCP development server
+# One-shot run via uvx (no local install required)
+BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 uvx busybar-mcp
+
+# Or install locally and run the console script
+uv sync
+BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 busybar-mcp
+
+# Development (built-in MCP dev server / inspector)
+uv sync
+BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 mcp dev -- uvx busybar-mcp
 ```
 
-Or run it standalone:
-
-```sh
-uv run server.py           # running the MCP server directly via uv
-```
+`python -m busybar_mcp` is equivalent to the console script and starts the same stdio server.
 
 Once started, clients can connect to the server using their MCP transport.
 
@@ -119,17 +122,18 @@ Once started, clients can connect to the server using their MCP transport.
 
 The project follows a thin-client layering:
 
-1. **server.py** — thin bootstrap (``< 30 lines``): loads ``.env``, imports all tool modules from the `_busybar_mcp/` package, calls ``server.run()``
-2. **busybar_mcp/packages/** — modularized MCP tools organized by Busy Bar API namespace:
+1. **busybar_mcp** — the package and its `main` entry point (`busybar_mcp/__init__.py`): loads `.env`, registers all tool modules on import, and calls `server.run(transport="stdio")`
+2. **busybar_mcp/** — modularized MCP tools organized by Busy Bar API namespace:
 
 ```
 ┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐      SDK calls     ┌──────────────┐
-│           MCP Client          │ ◄──────────────────► │ server.py        │                    │ Busy Bar     │
-│         (AI tool)             │   FastMCP tools      │ (bootstrap only) │ ◄────────────────► │ Device       │
+│           MCP Client          │ ◄──────────────────► │ busybar_mcp      │                    │ Busy Bar     │
+│         (AI tool)             │   FastMCP tools      │ (pkg + entry pt) │ ◄────────────────► │ Device       │
 └───────────────────────────────┘                      └──────────────────┘                    └──────────────┘
-                              busybar_mcp/  (package with 10 namespace modules + utils)   HTTP (OpenAPI)
-                                                                                          busybar_python_sdk
+                               busybar_mcp/  (package with 10 namespace modules + utils)   HTTP (OpenAPI)
+                                                                                           busybar_python_sdk
 ```
+
 
 - ``busybar_mcp/account.py`` — account retrieval tools
 - ``busybar_mcp/system.py`` — system information tools
@@ -161,7 +165,7 @@ python run_tests.py
 COVERAGE=1 python run_tests.py
 ```
 
-Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`).
+Coverage is reported via `pytest-cov` (`--cov=busybar_mcp --cov-report=term-missing`).
 
 ### Test Coverage Summary
 
