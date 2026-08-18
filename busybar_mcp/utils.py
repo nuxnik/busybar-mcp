@@ -32,6 +32,18 @@ def _serialize(obj):
     return obj
 
 
+def _flatten(d, prefix=""):
+    """Flatten a nested dict into a single-level dict using `.` as key separator."""
+    out = {}
+    for k, v in d.items():
+        key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            out.update(_flatten(v, key))
+        else:
+            out[key] = v
+    return out
+
+
 def _wrap_tool_error(message):
     """Wrap an error message into a CallToolResult with is_error=True."""
     from mcp.types import CallToolResult

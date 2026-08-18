@@ -1,22 +1,22 @@
+import json
+
 from busybar_python_sdk import BusyApi
 from mcp.types import CallToolResult
 
 from ._server import server
-from .utils import _make_api, _serialize, _wrap_tool_error
+from .utils import _flatten, _make_api, _wrap_tool_error
 
 @server.tool(name="get_busy_snapshot")
 def get_busy_snapshot():
     """Retrieve the current BUSY timer snapshot from the Busy Bar device.
 
-    This tool queries GET /api/busy/snapshot via `BusyApi.get_busy_snapshot()` to
-    return the current BUSY timer state including active profile and timing details.
+    This tool queries the BUSY bar to return the current BUSY timer state including active profile and timing details.
 
-    Returns a BusySnapshot object containing:
-        - snapshot (BusySnapshotSnapshot): The busy snapshot data — varies by type:
-            - BusySnapshotSimple: started (bool), remaining_ms (int)
-            - BusySnapshotInterval: started, remaining_ms, interval_index, intervals_count
-            - BusySnapshotInfinite: started (bool)
-            - BusySnapshotNotStarted: fields not applicable
+    Returns a flat JSON object (single-level keys, nested structure joined with `.`):
+        - type (str): One of "SIMPLE", "INTERVAL", "INFINITE", or "NOT_STARTED"
+        - Simple type keys: card_id (uuid), is_paused (bool), time_left_ms (int)
+        - Interval type keys: current_interval (int), current_interval_time_total_ms (int),
+          current_interval_time_left_ms (int), interval_settings.* (nested keys from interval settings)
         - snapshot_timestamp_ms (int): Timestamp of the snapshot in milliseconds since epoch
 
     Use case:
@@ -25,7 +25,10 @@ def get_busy_snapshot():
     """
     try:
         api = _make_api(BusyApi)
-        result = api.get_busy_snapshot()
-        return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
+        rest_response = api.get_busy_snapshot_without_preload_content()
+        payload = json.loads(rest_response.read().decode("utf-8"))
+        flat = _flatten(payload)
+        return CallToolResult(content=[{"type": "text", "text": json.dumps(flat, ensure_ascii=False)}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get busy snapshot: {e}")
+

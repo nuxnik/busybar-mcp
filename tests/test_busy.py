@@ -12,28 +12,25 @@ import busybar_mcp.busy as busy_module
 # ---------------------------------------------------------------------------
 
 BUSY_TOOLS = [
-    ("get_busy_snapshot", "get_busy_snapshot"),
+    "get_busy_snapshot",
 ]
-
-
-def _mock_model():
-    m = MagicMock()
-    m.model_dump.return_value = {"_mock": True}
-    return m
 
 
 def _mock_client_with_exception(exc_class=ConnectionError):
     client = MagicMock()
     side_effects = [exc_class("simulated connection failure")] * 1
-    for attr in ["get_busy_snapshot"]:
+    for attr in ["get_busy_snapshot_without_preload_content"]:
         setattr(client, attr, MagicMock(side_effect=side_effects))
     return client
 
 
 def _mock_client_for_happy_path():
+    import json
     client = MagicMock()
-    for attr in ["get_busy_snapshot"]:
-        setattr(client, attr, MagicMock(return_value=_mock_model()))
+    resp = MagicMock()
+    resp.read.return_value = json.dumps({"snapshot": {"type": "NOT_STARTED"}, "snapshot_timestamp_ms": 1}).encode("utf-8")
+    for attr in ["get_busy_snapshot_without_preload_content"]:
+        setattr(client, attr, MagicMock(return_value=resp))
     return client
 
 
@@ -41,8 +38,8 @@ def _mock_client_for_happy_path():
 # Happy-path tests
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("tool_func_name,api_method_attr", BUSY_TOOLS)
-def test_tool_happy_path(tool_func_name, api_method_attr):
+@pytest.mark.parametrize("tool_func_name", BUSY_TOOLS)
+def test_tool_happy_path(tool_func_name):
     with patch.object(busy_module, "_make_api") as mock_make_api:
         mock_client = _mock_client_for_happy_path()
         mock_make_api.return_value = mock_client
@@ -58,8 +55,8 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 # Error-path tests
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("tool_func_name,api_method_attr", BUSY_TOOLS)
-def test_tool_error_path(tool_func_name, api_method_attr):
+@pytest.mark.parametrize("tool_func_name", BUSY_TOOLS)
+def test_tool_error_path(tool_func_name):
     with patch.object(busy_module, "_make_api") as mock_make_api:
         mock_client = _mock_client_with_exception(ConnectionError)
         mock_make_api.return_value = mock_client
