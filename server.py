@@ -9,6 +9,7 @@ from busybar_mcp._server import server  # noqa: E402
 import busybar_mcp.account   # noqa: F401, E402
 import busybar_mcp.busy      # noqa: F401, E402
 import busybar_mcp.ble       # noqa: F401, E402
+import busybar_mcp.input     # noqa: F401, E402
 import busybar_mcp.settings  # noqa: F401, E402
 import busybar_mcp.smarthome # noqa: F401, E402
 import busybar_mcp.storage   # noqa: F401, E402

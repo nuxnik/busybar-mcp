@@ -13,6 +13,9 @@ import busybar_mcp.ble as ble_module
 
 BLE_TOOLS = [
     ("get_ble_status", "api_ble_status_get"),
+    ("enable_ble", "api_ble_enable_post"),
+    ("disable_ble", "api_ble_disable_post"),
+    ("remove_ble_pairing", "api_ble_pairing_delete"),
 ]
 
 
@@ -22,18 +25,16 @@ def _mock_model():
     return m
 
 
-def _mock_client_with_exception(exc_class=ConnectionError):
+def _mock_client_with_exception(api_method_attr, exc_class=ConnectionError):
     client = MagicMock()
     side_effects = [exc_class("simulated connection failure")] * 1
-    for attr in ["api_ble_status_get"]:
-        setattr(client, attr, MagicMock(side_effect=side_effects))
+    setattr(client, api_method_attr, MagicMock(side_effect=side_effects))
     return client
 
 
-def _mock_client_for_happy_path():
+def _mock_client_for_happy_path(api_method_attr):
     client = MagicMock()
-    for attr in ["api_ble_status_get"]:
-        setattr(client, attr, MagicMock(return_value=_mock_model()))
+    setattr(client, api_method_attr, MagicMock(return_value=_mock_model()))
     return client
 
 
@@ -44,7 +45,7 @@ def _mock_client_for_happy_path():
 @pytest.mark.parametrize("tool_func_name,api_method_attr", BLE_TOOLS)
 def test_tool_happy_path(tool_func_name, api_method_attr):
     with patch.object(ble_module, "_make_api") as mock_make_api:
-        mock_client = _mock_client_for_happy_path()
+        mock_client = _mock_client_for_happy_path(api_method_attr)
         mock_make_api.return_value = mock_client
 
         fn = getattr(ble_module, tool_func_name)
@@ -61,7 +62,7 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 @pytest.mark.parametrize("tool_func_name,api_method_attr", BLE_TOOLS)
 def test_tool_error_path(tool_func_name, api_method_attr):
     with patch.object(ble_module, "_make_api") as mock_make_api:
-        mock_client = _mock_client_with_exception(ConnectionError)
+        mock_client = _mock_client_with_exception(api_method_attr, ConnectionError)
         mock_make_api.return_value = mock_client
 
         fn = getattr(ble_module, tool_func_name)

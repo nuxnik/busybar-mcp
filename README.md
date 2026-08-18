@@ -2,9 +2,9 @@
 
 **NOTE: This project is still a work in progress**
 
-A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server currently provides 13 tools for account retrieval, system information, and time operations, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
+A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server provides 32 tools for account retrieval, system information, time operations, BLE control, and input events, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
-> **Status:** 28 MCP tools are fully implemented across account retrieval, system information, time operations, and device state queries, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
+> **Status:** 32 MCP tools are fully implemented across account retrieval, system information, time operations, device state queries, BLE control, and input events, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
 
 ## Prerequisites
 
@@ -91,6 +91,9 @@ Once started, clients can connect to the server using their MCP transport.
 | Tool | Description |
 |---|---|
 | `get_ble_status` | Retrieve BLE module status (powered state, MAC address) |
+| `enable_ble` | Enable the BLE module and start advertising |
+| `disable_ble` | Disable the BLE module and stop advertising |
+| `remove_ble_pairing` | Remove the current BLE pairing so the device becomes discoverable again |
 | `get_busy_snapshot` | Get the current BUSY timer state including profile and timing details |
 | `get_http_access` | Inspect HTTP API key management mode and validity |
 | `get_device_name` | Get the human-readable device name |
@@ -106,6 +109,12 @@ Once started, clients can connect to the server using their MCP transport.
 | `get_wifi_status` | Get Wi-Fi connection details (SSID, signal strength, channel, security) |
 | `get_wifi_networks` | Retrieve scanned available Wi-Fi networks in range |
 
+### Input tools
+
+| Tool | Description |
+|---|---|
+| `send_input_key` | Send a single key-press event to the device (up, down, ok, back, start, busy, custom, off, apps, settings) |
+
 ## Architecture
 
 The project follows a thin-client layering:
@@ -114,9 +123,9 @@ The project follows a thin-client layering:
 2. **busybar_mcp/packages/** — modularized MCP tools organized by Busy Bar API namespace:
 
 ```
-┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐     SDK calls     ┌──────────────┐
-│           MCP Client         │ ◄──────────────────► │ server.py        │                  │ Busy Bar     │
-│         (AI tool)            │   FastMCP tools      │ (bootstrap only) │ ◄────────────────► │ Device       │
+┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐      SDK calls     ┌──────────────┐
+│           MCP Client          │ ◄──────────────────► │ server.py        │                    │ Busy Bar     │
+│         (AI tool)             │   FastMCP tools      │ (bootstrap only) │ ◄────────────────► │ Device       │
 └───────────────────────────────┘                      └──────────────────┘                    └──────────────┘
                               busybar_mcp/  (package with 10 namespace modules + utils)   HTTP (OpenAPI)
                                                                                           busybar_python_sdk
@@ -126,6 +135,7 @@ The project follows a thin-client layering:
 - ``busybar_mcp/system.py`` — system information tools
 - ``busybar_mcp/time.py`` — time operations tools
 - ``busybar_mcp/ble.py`` — BLE module tools
+- ``busybar_mcp/input.py`` — input event tools
 - ``busybar_mcp/busy.py`` — busy timer tools
 - ``busybar_mcp/settings.py`` — device settings tools
 - ``busybar_mcp/smarthome.py`` — smart home tools
@@ -155,8 +165,8 @@ Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`)
 
 ### Test Coverage Summary
 
-- **28 MCP tools** tested — one parametrized happy-path test per tool across account, system info, time, BLE, busy timer, settings, smart home, storage, update, and wifi categories.
-  - Per-module test files: ``tests/test_account.py``, ``tests/test_system.py``, ``tests/test_time.py``, ``tests/test_ble.py``, ``tests/test_busy.py``, ``tests/test_settings.py``, ``tests/test_smarthome.py``, ``tests/test_storage.py``, ``tests/test_updater.py``, ``tests/test_wifi.py``
+- **32 MCP tools** tested — one parametrized happy-path test per tool across account, system info, time, BLE, busy timer, settings, smart home, storage, update, wifi, and input categories.
+  - Per-module test files: ``tests/test_account.py``, ``tests/test_system.py``, ``tests/test_time.py``, ``tests/test_ble.py``, ``tests/test_busy.py``, ``tests/test_settings.py``, ``tests/test_smarthome.py``, ``tests/test_storage.py``, ``tests/test_updater.py``, ``tests/test_wifi.py``, ``tests/test_input.py``
 - **Error-path tests** verify behaviour when the Busy Bar device is missing or unreachable (mocked HTTP failures).
 - **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
 - **conftest fixtures**:
@@ -165,6 +175,6 @@ Coverage is reported via `pytest-cov` (`--cov=server --cov-report=term-missing`)
 
 ## What's Next
 
-- Extend with write/mutation tools (display messages, notifications)
+- Extend with additional write/mutation tools (display messages, notifications)
 - Implement MCP resources for live device data streams
 - Configure linting and formatting toolchain
