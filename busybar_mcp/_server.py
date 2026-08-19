@@ -1,3 +1,5 @@
-from mcp.server.mcpserver import MCPServer
+"""Backward-compatible server import for existing tool modules."""
 
-server = MCPServer("Busy Bar MCP")
+from .server import server
+
+MCPServer = type(server)
