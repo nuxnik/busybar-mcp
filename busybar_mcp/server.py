@@ -2,24 +2,16 @@
 
 from mcp.server.mcpserver import MCPServer
 
-from .client import BusyBarClient
-from .config import Settings
-
 
 server = MCPServer("Busy Bar MCP")
 
 
 def register_tools() -> None:
-    """Import all tool modules so their decorators register with the server."""
-    from .tools import account, ble, busy, input, settings, smarthome, storage, system, time, updater, wifi
+    """Import all tool modules through one explicit registration boundary."""
+    from . import tools
 
-    # Keep explicit references so registration remains obvious and import-time side effects are intentional.
-    _ = (account, ble, busy, input, settings, smarthome, storage, system, time, updater, wifi)
-
-
-def create_client() -> BusyBarClient:
-    """Build a device client from environment configuration."""
-    return BusyBarClient(Settings.from_env())
+    # The imported package intentionally performs decorator registration.
+    _ = tools
 
 
 def run() -> None:
