@@ -1,5 +1,6 @@
 """MCP server construction and tool registration."""
 
+from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
 
 
@@ -15,6 +16,7 @@ def register_tools() -> None:
 
 
 def run() -> None:
-    """Run the MCP server over stdio."""
+    """Load .env without overriding exported variables, then run over stdio."""
+    load_dotenv(override=False)
     register_tools()
     server.run(transport="stdio")
