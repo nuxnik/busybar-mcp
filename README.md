@@ -2,7 +2,7 @@
 
 A Python [MCP](https://modelcontextprotocol.io/) server written with [FastMCP](https://fastmcp.endpoints.com/) that wraps the **[busybar_python_sdk](https://github.com/nuxnik/busybar-python-sdk)** to communicate with a physical [Busy Bar](https://busy.app/) device over HTTP. The Busy Bar is a digital time-management display — this MCP server provides 32 tools for account retrieval, system information, time operations, BLE control, and input events, exposing its functionality through the standard Model Context Protocol so other tools and AI assistants can interact with it programmatically.
 
-> **Status:** 32 MCP tools are fully implemented across account retrieval, system information, time operations, device state queries, BLE control, and input events, with a complete test suite documented in this README. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
+> **Status:** 32 MCP tools are fully implemented across account retrieval, system information, time operations, device state queries, BLE control, and input events, with a complete test suite. The project is ready to use — see the [What's Next](#whats-next) section below for planned work.
 
 ## Prerequisites
 
@@ -21,26 +21,56 @@ This creates a virtual environment and installs all packages declared in `pyproj
 
 ## Configuration
 
-Copy the example `.env.example` file (if present) to create your own `.env` at the project root with the following variables.
+The server supports configuration through either a `.env` file or environment variables. The same two variables are required in both cases:
 
 | Variable | Description | Example |
 |---|---|---|
 | `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device | `my-super-secret-token` |
 | `BUSYBAR_BASE_URL` | IP address or hostname of the Busy Bar device (no protocol prefix) | `10.0.4.20` |
 
+### Using `.env`
+
+Create a `.env` file in the project root:
+
 ```env
 BUSYBAR_API_TOKEN=my-super-secret-token
 BUSYBAR_BASE_URL=10.0.4.20
 ```
 
-It is also possible to declare the variables before starting the server:
-```env
-export BUSYBAR_API_TOKEN=my-super-secret-token && export BUSYBAR_BASE_URL=10.0.4.20 
+The server loads `.env` when it starts.
+
+### Using environment variables
+
+You can also configure the server through variables already present in the process environment:
+
+```sh
+export BUSYBAR_API_TOKEN=my-super-secret-token
+export BUSYBAR_BASE_URL=10.0.4.20
 ```
+
+Then start the server normally.
+
+### Configuration precedence
+
+Environment variables take precedence over values in `.env`. The server loads `.env` with `override=False`, so an environment variable that has already been exported is never replaced by the value in `.env`.
+
+For example, if `.env` contains:
+
+```env
+BUSYBAR_BASE_URL=10.0.4.20
+```
+
+but the shell contains:
+
+```sh
+export BUSYBAR_BASE_URL=10.0.4.30
+```
+
+then `10.0.4.30` is used.
 
 ## Usage
 
-Set the `BUSYBAR_API_TOKEN` and `BUSYBAR_BASE_URL` environment variables (or place them in a `.env` file in the working directory), then start the MCP server:
+Set `BUSYBAR_API_TOKEN` and `BUSYBAR_BASE_URL` through either `.env` or the environment, then start the MCP server:
 
 ```sh
 # One-shot run via uvx (no local install required)
@@ -120,34 +150,54 @@ Once started, clients can connect to the server using their MCP transport.
 
 ## Architecture
 
-The project follows a thin-client layering:
+The project follows a thin-client layering with a clear separation between MCP presentation, configuration, and device access:
 
-1. **busybar_mcp** — the package and its `main` entry point (`busybar_mcp/__init__.py`): loads `.env`, registers all tool modules on import, and calls `server.run(transport="stdio")`
-2. **busybar_mcp/** — modularized MCP tools organized by Busy Bar API namespace:
-
+```text
+┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐
+│           MCP Client          │ ◄──────────────────► │   busybar_mcp    │
+│         (AI tool)             │                      │                  │
+└───────────────────────────────┘                      └────────┬─────────┘
+                                                                │
+                                      ┌─────────────────────────┼─────────────────────┐
+                                      │                         │                     │
+                                      ▼                         ▼                     ▼
+                                  config.py                tools/              client.py
+                                      │                         │                     │
+                                      └─────────────────────────┼─────────────────────┘
+                                                                │ SDK calls
+                                                                ▼
+                                                        busybar_python_sdk
+                                                                │ HTTP
+                                                                ▼
+                                                          Busy Bar Device
 ```
-┌───────────────────────────────┐      MCP/stdio       ┌──────────────────┐      SDK calls     ┌──────────────┐
-│           MCP Client          │ ◄──────────────────► │ busybar_mcp      │                    │ Busy Bar     │
-│         (AI tool)             │   FastMCP tools      │ (pkg + entry pt) │ ◄────────────────► │ Device       │
-└───────────────────────────────┘                      └──────────────────┘                    └──────────────┘
-                               busybar_mcp/  (package with 10 namespace modules + utils)   HTTP (OpenAPI)
-                                                                                           busybar_python_sdk
+
+### Package structure
+
+```text
+busybar_mcp/
+├── __init__.py       # Package API and entry point
+├── __main__.py       # python -m busybar_mcp entry point
+├── server.py         # MCP server and tool registration
+├── client.py         # Busy Bar SDK client boundary
+├── config.py         # Runtime configuration from environment
+├── _server.py        # Backwards-compatible server import
+├── utils.py          # Shared serialization/error utilities
+└── tools/             # MCP tool modules and registration
 ```
 
+The key responsibilities are:
 
-- ``busybar_mcp/account.py`` — account retrieval tools
-- ``busybar_mcp/system.py`` — system information tools
-- ``busybar_mcp/time.py`` — time operations tools
-- ``busybar_mcp/ble.py`` — BLE module tools
-- ``busybar_mcp/input.py`` — input event tools
-- ``busybar_mcp/busy.py`` — busy timer tools
-- ``busybar_mcp/settings.py`` — device settings tools
-- ``busybar_mcp/smarthome.py`` — smart home tools
-- ``busybar_mcp/storage.py`` — storage management tools
-- ``busybar_mcp/updater.py`` — firmware update tools
-- ``busybar_mcp/wifi.py`` — Wi-Fi status tools
-- ``busybar_mcp/utils.py`` — shared utilities (`_serialize`, `_wrap_tool_error`)
-3. **HTTP → Busy Bar device** — the SDK communicates with the device over HTTP using the OpenAPI schema defined in `openapi.yaml`
+- `server.py` — creates the MCP server, registers the tool package, and starts the stdio transport.
+- `config.py` — reads `BUSYBAR_BASE_URL` and `BUSYBAR_API_TOKEN` from the process environment and validates that they are present.
+- `client.py` — provides the boundary between the MCP application and `busybar_python_sdk`.
+- `tools/` — contains the MCP tool implementations and their registration.
+- `utils.py` — contains shared serialization and tool-error helpers.
+- `__init__.py` / `__main__.py` — provide the package and command-line entry points.
+
+At startup, `server.py` loads `.env` using `load_dotenv(override=False)`. This means exported environment variables are preserved and take precedence over `.env` values.
+
+The SDK communicates with the device over HTTP using the OpenAPI schema defined by `openapi.yaml`.
 
 ## Testing
 
@@ -170,12 +220,10 @@ Coverage is reported via `pytest-cov` (`--cov=busybar_mcp --cov-report=term-miss
 ### Test Coverage Summary
 
 - **32 MCP tools** tested — one parametrized happy-path test per tool across account, system info, time, BLE, busy timer, settings, smart home, storage, update, wifi, and input categories.
-  - Per-module test files: ``tests/test_account.py``, ``tests/test_system.py``, ``tests/test_time.py``, ``tests/test_ble.py``, ``tests/test_busy.py``, ``tests/test_settings.py``, ``tests/test_smarthome.py``, ``tests/test_storage.py``, ``tests/test_updater.py``, ``tests/test_wifi.py``, ``tests/test_input.py``
+- **Configuration tests** verify required environment variables and configuration parsing.
 - **Error-path tests** verify behaviour when the Busy Bar device is missing or unreachable (mocked HTTP failures).
 - **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
-- **conftest fixtures**:
-  - `clear_env_vars` — temporarily removes `BUSYBAR_BASE_URL` and `BUSYBAR_API_TOKEN` from `os.environ` (restoring originals afterward).
-- **Serialization tests** (`tests/test_serialization.py`) verify `_serialize()` handles SDK models, dicts, lists, scalars, and edge cases correctly.
+- **Serialization tests** verify `_serialize()` handles SDK models, dicts, lists, scalars, and edge cases correctly.
 
 ## What's Next
 
