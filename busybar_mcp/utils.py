@@ -1,26 +1,18 @@
-import os
+"""Shared helpers for MCP tool implementations."""
 
-from busybar_python_sdk import Configuration
 from busybar_python_sdk.api_client import ApiClient
 
+from .client import BusyBarClient
+from .config import Settings
+
+
 def _make_api(cls):
-    """Create and return an API instance configured with env credentials."""
-    base_url = os.environ.get("BUSYBAR_BASE_URL")
-    api_token = os.environ.get("BUSYBAR_API_TOKEN")
+    """Create an SDK API instance using the validated environment settings."""
+    return BusyBarClient(Settings.from_env()).api(cls)
 
-    if not base_url:
-        raise ValueError("Missing required environment variable: BUSYBAR_BASE_URL")
-    if not api_token:
-        raise ValueError("Missing required environment variable: BUSYBAR_API_TOKEN")
-
-    config = Configuration(
-        host=base_url,
-        api_key={"ApiKeyAuth": api_token},
-    )
-    return cls(api_client=ApiClient(configuration=config))
 
 def _serialize(obj):
-    """Recursively serialize a busybar_python_sdk model to a JSON-serializable dict."""
+    """Recursively serialize a busybar_python_sdk model to a JSON-serializable value."""
     if hasattr(obj, "model_dump"):
         return obj.model_dump()
     if hasattr(obj, "to_dict"):
@@ -29,6 +21,8 @@ def _serialize(obj):
         return obj._to_dict()
     if isinstance(obj, list):
         return [_serialize(item) for item in obj]
+    if isinstance(obj, dict):
+        return {key: _serialize(value) for key, value in obj.items()}
     return obj
 
 
