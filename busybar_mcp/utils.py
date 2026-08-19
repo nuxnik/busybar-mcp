@@ -1,7 +1,5 @@
 """Shared helpers for MCP tool implementations."""
 
-from busybar_python_sdk.api_client import ApiClient
-
 from .client import BusyBarClient
 from .config import Settings
 
