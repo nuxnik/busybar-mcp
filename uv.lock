@@ -48,7 +48,7 @@ wheels = [
 
 [[package]]
 name = "busybar-mcp"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "busybar-python-sdk" },
@@ -63,7 +63,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "busybar-python-sdk", git = "https://github.com/nuxnik/busybar-python-sdk.git?rev=v25.0.0" },
+    { name = "busybar-python-sdk", specifier = ">=0.0.1" },
     { name = "mcp", extras = ["cli"], specifier = ">=2.0.0" },
 ]
 
@@ -76,12 +76,16 @@ dev = [
 [[package]]
 name = "busybar-python-sdk"
 version = "0.0.1"
-source = { git = "https://github.com/nuxnik/busybar-python-sdk.git?rev=v25.0.0#beba0a3dd36c6be1c9bc4ba9cfc541426c98fcad" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "typing-extensions" },
     { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/60/bf/d686912932194027fb68fbac65a3cedbc11a77c6cdc9763f206027ae1b76/busybar_python_sdk-0.0.1.tar.gz", hash = "sha256:bcc20b66725e12f1b7dccaba4c421a6e579e93d99fa88b7215db44aa48c9aaf0", size = 142900, upload-time = "2026-08-18T20:50:02.908Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/fb/594f8acc6131a07f11f0f48fba2ba14667991824bf0023d0547cbd4c7ba2/busybar_python_sdk-0.0.1-py3-none-any.whl", hash = "sha256:e45c4c9d9b32f26912eb1bce96ee0742c444ba4af92bb3817faf600878c5782f", size = 301572, upload-time = "2026-08-18T20:50:00.889Z" },
 ]
 
 [[package]]
