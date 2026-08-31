@@ -80,12 +80,12 @@ BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 uvx busybar-mcp
 uv sync
 BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 busybar-mcp
 
-# Development (built-in MCP dev server / inspector)
+# Development (inspecting/debugging the server with the MCP Inspector)
 uv sync
-BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 mcp dev -- uvx busybar-mcp
+BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 uv run mcp dev --with-editable . mcp_entry.py:server
 ```
 
-`python -m busybar_mcp` is equivalent to the console script and starts the same stdio server.
+`mcp_entry.py` is a dev-only entry helper for use with `mcp dev` / the MCP Inspector: it loads `.env` (same precedence as the production entry point) and registers all tools on the `server` object, but is **not** a standalone server launcher. Production entry points remain `busybar-mcp`, `uvx busybar-mcp`, and `python -m busybar_mcp` (equivalent to the console script).
 
 Once started, clients can connect to the server using their MCP transport.
 
@@ -175,6 +175,7 @@ The project follows a thin-client layering with a clear separation between MCP p
 ### Package structure
 
 ```text
+mcp_entry.py           # Repo-root dev-only entry file for mcp dev / MCP Inspector
 busybar_mcp/
 ├── __init__.py       # Package API and entry point
 ├── __main__.py       # python -m busybar_mcp entry point
@@ -194,6 +195,7 @@ The key responsibilities are:
 - `tools/` — contains the MCP tool implementations and their registration.
 - `utils.py` — contains shared serialization and tool-error helpers.
 - `__init__.py` / `__main__.py` — provide the package and command-line entry points.
+- `mcp_entry.py` — repo-root dev-only entry file (loads `.env`, registers tools on `server`) for use with `mcp dev`; not part of the package or distribution.
 
 At startup, `server.py` loads `.env` using `load_dotenv(override=False)`. This means exported environment variables are preserved and take precedence over `.env` values.
 
