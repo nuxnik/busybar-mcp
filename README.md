@@ -23,10 +23,10 @@ This creates a virtual environment and installs all packages declared in `pyproj
 
 The server supports configuration through either a `.env` file or environment variables. The same two variables are required in both cases:
 
-| Variable | Description | Example |
-|---|---|---|
+| Variable            | Description                                                                                                                                                         | Example                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; presented to the device as a Bearer `Authorization` header (per the `busybar-python-sdk` 27.5.0 client) | `my-super-secret-token` |
-| `BUSYBAR_BASE_URL` | IP address or hostname of the Busy Bar device (a scheme-prefixed `http://…` / `https://…` value is also accepted) | `10.0.4.20` |
+| `BUSYBAR_BASE_URL`  | IP address or hostname of the Busy Bar device (a scheme-prefixed `http://…` / `https://…` value is also accepted)                                                   | `10.0.4.20`             |
 
 ### Using `.env`
 
@@ -93,59 +93,59 @@ Once started, clients can connect to the server using their MCP transport.
 
 ### Account tools
 
-| Tool | Description |
-|---|---|
-| `get_account_info` | Retrieve linked account information (email, account ID) from the Busy Bar device |
-| `get_account_status` | Check MQTT connection state for the linked account |
-| `get_account_backend` | Inspect MQTT backend configuration (server URL, certificate settings) |
+| Tool                  | Description                                                                      |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `get_account_info`    | Retrieve linked account information (email, account ID) from the Busy Bar device |
+| `get_account_status`  | Check MQTT connection state for the linked account                               |
+| `get_account_backend` | Inspect MQTT backend configuration (server URL, certificate settings)            |
 
 ### System tools
 
-| Tool | Description |
-|---|---|
-| `get_api_version` | Query the API version supported by the device |
-| `get_transport` | Get the current network transport type (USB or Wi-Fi) |
+| Tool                | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `get_api_version`   | Query the API version supported by the device                         |
+| `get_transport`     | Get the current network transport type (USB or Wi-Fi)                 |
 | `get_device_status` | Comprehensive health check: device, firmware, system, and power state |
-| `get_device_info` | Retrieve hardware identifiers and manufacturing details |
-| `get_firmware_info` | Get firmware version and build metadata |
-| `get_system_status` | Runtime system metrics (uptime, API SemVer, auto-update settings) |
-| `get_power_status` | Battery charge level, voltage, current, and charging state |
+| `get_device_info`   | Retrieve hardware identifiers and manufacturing details               |
+| `get_firmware_info` | Get firmware version and build metadata                               |
+| `get_system_status` | Runtime system metrics (uptime, API SemVer, auto-update settings)     |
+| `get_power_status`  | Battery charge level, voltage, current, and charging state            |
 
 ### Time tools
 
-| Tool | Description |
-|---|---|
-| `get_time` | Retrieve the device's real-time clock timestamp in ISO 8601 format |
+| Tool           | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `get_time`     | Retrieve the device's real-time clock timestamp in ISO 8601 format |
 | `get_timezone` | Get the currently configured timezone (name, offset, abbreviation) |
-| `get_tzlist` | List all supported timezones available for configuration |
+| `get_tzlist`   | List all supported timezones available for configuration           |
 
 ### Device Status & Configuration
 
-| Tool | Description |
-|---|---|
-| `get_ble_status` | Retrieve BLE module status (powered state, MAC address) |
-| `enable_ble` | Enable the BLE module and start advertising |
-| `disable_ble` | Disable the BLE module and stop advertising |
-| `remove_ble_pairing` | Remove the current BLE pairing so the device becomes discoverable again |
-| `get_busy_snapshot` | Get the current BUSY timer state including profile and timing details |
-| `get_http_access` | Inspect HTTP API key management mode and validity |
-| `get_device_name` | Get the human-readable device name |
-| `get_display_brightness` | Retrieve the current display brightness level |
-| `get_audio_volume` | Retrieve the current audio volume level |
-| `get_smart_home_pairing_status` | Query Matter fabric count and latest commissioning outcome |
-| `get_smart_home_switch_state` | Read smart home relay/output state and startup behavior |
-| `list_storage_files` | List files and directories on device storage (accepts optional path argument) |
-| `get_storage_status` | Get storage capacity details (used, free, total bytes) |
-| `get_firmware_update_status` | Check currently installed firmware and pending update state |
-| `get_update_changelog` | Retrieve release notes for a specific firmware version (accepts required version argument) |
-| `get_autoupdate_settings` | Get automatic update configuration (enabled, window start/end) |
-| `get_wifi_status` | Get Wi-Fi connection details (SSID, signal strength, channel, security) |
-| `get_wifi_networks` | Retrieve scanned available Wi-Fi networks in range (local-only device endpoint — requires local-network reachability to the device) |
+| Tool                            | Description                                                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `get_ble_status`                | Retrieve BLE module status (powered state, MAC address)                                                                             |
+| `enable_ble`                    | Enable the BLE module and start advertising                                                                                         |
+| `disable_ble`                   | Disable the BLE module and stop advertising                                                                                         |
+| `remove_ble_pairing`            | Remove the current BLE pairing so the device becomes discoverable again                                                             |
+| `get_busy_snapshot`             | Get the current BUSY timer state including profile and timing details                                                               |
+| `get_http_access`               | Inspect HTTP API key management mode and validity                                                                                   |
+| `get_device_name`               | Get the human-readable device name                                                                                                  |
+| `get_display_brightness`        | Retrieve the current display brightness level                                                                                       |
+| `get_audio_volume`              | Retrieve the current audio volume level                                                                                             |
+| `get_smart_home_pairing_status` | Query Matter fabric count and latest commissioning outcome                                                                          |
+| `get_smart_home_switch_state`   | Read smart home relay/output state and startup behavior                                                                             |
+| `list_storage_files`            | List files and directories on device storage (accepts optional path argument)                                                       |
+| `get_storage_status`            | Get storage capacity details (used, free, total bytes)                                                                              |
+| `get_firmware_update_status`    | Check currently installed firmware and pending update state                                                                         |
+| `get_update_changelog`          | Retrieve release notes for a specific firmware version (accepts required version argument)                                          |
+| `get_autoupdate_settings`       | Get automatic update configuration (enabled, window start/end)                                                                      |
+| `get_wifi_status`               | Get Wi-Fi connection details (SSID, signal strength, channel, security)                                                             |
+| `get_wifi_networks`             | Retrieve scanned available Wi-Fi networks in range (local-only device endpoint — requires local-network reachability to the device) |
 
 ### Input tools
 
-| Tool | Description |
-|---|---|
+| Tool             | Description                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
 | `send_input_key` | Send a single key-press event to the device (up, down, ok, back, start, busy, custom, off, apps, settings) |
 
 ## Architecture
