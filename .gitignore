@@ -1,6 +1,7 @@
 *$py.class
 *.py[cod]
 .env
+dist/
 .coverage
 .opencode
 AGENTS.md

@@ -1,0 +1,99 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+# Serialize runs: never cancel a run that is mid-publish, and never run two
+# in parallel (a commit-back to main re-triggers this workflow and must be
+# processed idempotently, not concurrently).
+concurrency:
+  group: publish-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Sync, tag, build, publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history and tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Provision Python 3.12
+        run: uv python install 3.12
+
+      - name: Sync package metadata (version, repository URL, testpypi index)
+        id: sync
+        run: |
+          set -euo pipefail
+          uv run --no-project --python 3.12 python scripts/sync_metadata.py > sync_metadata.out
+          cat sync_metadata.out
+          TARGET_VERSION="$(sed -n 's/^TARGET_VERSION=//p' sync_metadata.out)"
+          CHANGED="$(sed -n 's/^CHANGED=//p' sync_metadata.out)"
+          if [ -z "${TARGET_VERSION}" ] || [ -z "${CHANGED}" ]; then
+            echo "::error::scripts/sync_metadata.py did not emit TARGET_VERSION/CHANGED"
+            exit 1
+          fi
+          {
+            echo "target_version=${TARGET_VERSION}"
+            echo "changed=${CHANGED}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Commit metadata update to main
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "ci: align package metadata and version with busybar-python-sdk"
+          git push origin HEAD:main
+
+      - name: Tag version (first publish of this version only)
+        id: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.sync.outputs.target_version }}"
+          if git ls-remote --tags origin | grep -Fq "refs/tags/${TAG}$"; then
+            echo "Tag ${TAG} already exists — this version was already published; skipping tag and publish."
+            echo "first_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            git tag "${TAG}"
+            git push origin "refs/tags/${TAG}"
+            echo "Created tag ${TAG}."
+            echo "first_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build distribution (sdist + wheel)
+        run: |
+          set -euo pipefail
+          uv build
+          test -n "$(ls dist/*.whl 2>/dev/null | head -n 1)"
+          test -n "$(ls dist/*.tar.gz 2>/dev/null | head -n 1)"
+          ls -la dist/
+
+      - name: Publish to test.pypi.org
+        if: steps.tag.outputs.first_publish == 'true'
+        env:
+          PYPI_TOKEN: ${{ secrets.PyPI_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PYPI_TOKEN}" ]; then
+            echo "::error::The PyPI_API_TOKEN repository secret is not configured — cannot publish to test.pypi.org."
+            exit 1
+          fi
+          # Only the explicit 'testpypi' index is targeted; no pypi.org
+          # endpoint is configured anywhere in this workflow.
+          uv publish --index testpypi --token "${PYPI_TOKEN}"

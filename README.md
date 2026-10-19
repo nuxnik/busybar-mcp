@@ -227,6 +227,18 @@ Coverage is reported via `pytest-cov` (`--cov=busybar_mcp --cov-report=term-miss
 - **Missing environment variable tests** confirm that absent `BUSYBAR_BASE_URL` / `BUSYBAR_API_TOKEN` are handled gracefully.
 - **Serialization tests** verify `_serialize()` handles SDK models, dicts, lists, scalars, and edge cases correctly.
 
+## Publishing
+
+Releases are automated by the GitHub Actions pipeline (`.github/workflows/publish.yml`), triggered on every push to `main`:
+
+1. `pyproject.toml` metadata is synchronized (repository URL, testpypi index).
+2. The project version is aligned with the `busybar-python-sdk` version (the first `X.Y.Z` token in its dependency specifier).
+3. The updated commit is tagged `v<version>` (e.g., `v27.5.0`).
+4. The package is built with `uv build` (sdist + wheel).
+5. On success the artifacts are published to **test.pypi.org** via `uv publish --index testpypi` (never pypi.org).
+
+Publishing requires a repository secret **`PyPI_API_TOKEN`** holding a test.pypi.org API token — obtain one at <https://test.pypi.org/legacy/token/> and add it under **Settings → Secrets and variables → Actions** on <https://github.com/nuxnik/busybar-mcp>. Runs where the version was already published perform no commit, tag, or upload (idempotent).
+
 ## What's Next
 
 - Extend with additional write/mutation tools (display messages, notifications)
