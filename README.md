@@ -231,7 +231,7 @@ Coverage is reported via `pytest-cov` (`--cov=busybar_mcp --cov-report=term-miss
 
 Releases are automated by the GitHub Actions pipeline (`.github/workflows/publish.yml`), triggered on every push to `main`:
 
-1. `pyproject.toml` metadata is synchronized (repository URL, testpypi index).
+1. `pyproject.toml` metadata is synchronized (repository URL, testpypi index) via `scripts/sync_metadata.py`.
 2. The project version is aligned with the `busybar-python-sdk` version (the first `X.Y.Z` token in its dependency specifier).
 3. The updated commit is tagged `v<version>` (e.g., `v27.5.0`).
 4. The package is built with `uv build` (sdist + wheel).
