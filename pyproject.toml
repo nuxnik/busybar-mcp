@@ -14,7 +14,7 @@ authors = [
     {name = "nuxnik"},
 ]
 dependencies = [
-    "busybar-python-sdk>=0.0.1",
+    "busybar-python-sdk>=27.5.0",
     "mcp[cli]>=2.0.0",
 ]
 

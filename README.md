@@ -17,7 +17,7 @@ Clone the repository and install dependencies:
 uv sync
 ```
 
-This creates a virtual environment and installs all packages declared in `pyproject.toml` (including `busybar_python_sdk`).
+This creates a virtual environment and installs all packages declared in `pyproject.toml`, including `busybar-python-sdk` ≥ 27.5.0 (the device API client this server wraps).
 
 ## Configuration
 
@@ -25,8 +25,8 @@ The server supports configuration through either a `.env` file or environment va
 
 | Variable | Description | Example |
 |---|---|---|
-| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device | `my-super-secret-token` |
-| `BUSYBAR_BASE_URL` | IP address or hostname of the Busy Bar device (no protocol prefix) | `10.0.4.20` |
+| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; presented to the device as a Bearer `Authorization` header (per the `busybar-python-sdk` 27.5.0 client) | `my-super-secret-token` |
+| `BUSYBAR_BASE_URL` | IP address or hostname of the Busy Bar device (a scheme-prefixed `http://…` / `https://…` value is also accepted) | `10.0.4.20` |
 
 ### Using `.env`
 
@@ -140,7 +140,7 @@ Once started, clients can connect to the server using their MCP transport.
 | `get_update_changelog` | Retrieve release notes for a specific firmware version (accepts required version argument) |
 | `get_autoupdate_settings` | Get automatic update configuration (enabled, window start/end) |
 | `get_wifi_status` | Get Wi-Fi connection details (SSID, signal strength, channel, security) |
-| `get_wifi_networks` | Retrieve scanned available Wi-Fi networks in range |
+| `get_wifi_networks` | Retrieve scanned available Wi-Fi networks in range (local-only device endpoint — requires local-network reachability to the device) |
 
 ### Input tools
 

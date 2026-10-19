@@ -32,7 +32,7 @@ def get_smart_home_pairing_status():
 def get_smart_home_switch_state():
     """Retrieve smart home switch (output) state from the Busy Bar device.
 
-    This tool queries GET /api/smart_home/switch via `SmartHomeApi.get_smart_home_switch_state()`
+    This tool queries GET /busybar/smart_home/switch via `SmartHomeApi.busybar_smart_home_switch_get()`
     to read the current relay/driver output configuration.
 
     Returns a SmartHomeSwitchState object containing:
@@ -46,7 +46,7 @@ def get_smart_home_switch_state():
     """
     try:
         api = _make_api(SmartHomeApi)
-        result = api.api_smart_home_switch_get()
+        result = api.busybar_smart_home_switch_get()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get smart home switch state: {e}")

@@ -63,7 +63,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "busybar-python-sdk", specifier = ">=0.0.1" },
+    { name = "busybar-python-sdk", specifier = ">=27.5.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=2.0.0" },
 ]
 
@@ -75,7 +75,7 @@ dev = [
 
 [[package]]
 name = "busybar-python-sdk"
-version = "0.0.1"
+version = "27.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
@@ -83,9 +83,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/bf/d686912932194027fb68fbac65a3cedbc11a77c6cdc9763f206027ae1b76/busybar_python_sdk-0.0.1.tar.gz", hash = "sha256:bcc20b66725e12f1b7dccaba4c421a6e579e93d99fa88b7215db44aa48c9aaf0", size = 142900, upload-time = "2026-08-18T20:50:02.908Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/97/99f41e2d76a08d403cca0a639cc0b3e2f792d389790c4df6f352378acfc0/busybar_python_sdk-27.5.0.tar.gz", hash = "sha256:867aac64839aad143a1ff1eac40ce0e0a7f1a7701159de31bd0219a0316fb73a", size = 147816, upload-time = "2026-10-19T13:27:28.57Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/fb/594f8acc6131a07f11f0f48fba2ba14667991824bf0023d0547cbd4c7ba2/busybar_python_sdk-0.0.1-py3-none-any.whl", hash = "sha256:e45c4c9d9b32f26912eb1bce96ee0742c444ba4af92bb3817faf600878c5782f", size = 301572, upload-time = "2026-08-18T20:50:00.889Z" },
+    { url = "https://files.pythonhosted.org/packages/41/58/61dd5304aa7eb71ff8e494a061cc45a7dc8badbb45a30100bbfca7e40b34/busybar_python_sdk-27.5.0-py3-none-any.whl", hash = "sha256:938bb3f8fe06248ee03213d7cf1b282fff02160d2a65321b2366765c147f5a58", size = 314986, upload-time = "2026-10-19T13:27:26.885Z" },
 ]
 
 [[package]]

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,9 +13,18 @@ import busybar_mcp.wifi as wifi_module
 # ---------------------------------------------------------------------------
 
 WIFI_TOOLS = [
-    ("get_wifi_status", "api_wifi_status_get"),
-    ("get_wifi_networks", "get_wifi_networks"),
+    ("get_wifi_status", "busybar_wifi_status_get"),
+    ("get_wifi_networks", "get_raw"),
 ]
+
+# A NetworkResponse-shaped body: `get_wifi_networks` validates the dict
+# returned by `BusyBarClient.get_raw` with the real `NetworkResponse` model.
+NETWORKS_BODY = {
+    "count": 1,
+    "networks": [
+        {"ssid": "TestNetwork", "security": "WPA3", "rssi": -58},
+    ],
+}
 
 
 def _mock_model():
@@ -23,19 +33,23 @@ def _mock_model():
     return m
 
 
-def _mock_client_with_exception(exc_class=ConnectionError):
-    client = MagicMock()
-    side_effects = [exc_class("simulated connection failure")] * 2
-    for attr in ["api_wifi_status_get", "get_wifi_networks"]:
-        setattr(client, attr, MagicMock(side_effect=side_effects))
-    return client
+@contextmanager
+def _apply_happy_path():
+    with patch.object(wifi_module, "_make_api") as mock_make_api, \
+            patch.object(wifi_module, "_client") as mock_client:
+        mock_make_api.return_value.busybar_wifi_status_get.return_value = _mock_model()
+        mock_client.return_value.get_raw.return_value = NETWORKS_BODY
+        yield mock_make_api, mock_client
 
 
-def _mock_client_for_happy_path():
-    client = MagicMock()
-    for attr in ["api_wifi_status_get", "get_wifi_networks"]:
-        setattr(client, attr, MagicMock(return_value=_mock_model()))
-    return client
+@contextmanager
+def _apply_error_path(exc_class=ConnectionError):
+    with patch.object(wifi_module, "_make_api") as mock_make_api, \
+            patch.object(wifi_module, "_client") as mock_client:
+        exc = exc_class("simulated connection failure")
+        mock_make_api.return_value.busybar_wifi_status_get.side_effect = exc
+        mock_client.return_value.get_raw.side_effect = exc
+        yield mock_make_api, mock_client
 
 
 # ---------------------------------------------------------------------------
@@ -44,10 +58,7 @@ def _mock_client_for_happy_path():
 
 @pytest.mark.parametrize("tool_func_name,api_method_attr", WIFI_TOOLS)
 def test_tool_happy_path(tool_func_name, api_method_attr):
-    with patch.object(wifi_module, "_make_api") as mock_make_api:
-        mock_client = _mock_client_for_happy_path()
-        mock_make_api.return_value = mock_client
-
+    with _apply_happy_path():
         fn = getattr(wifi_module, tool_func_name)
         result = fn()
 
@@ -61,10 +72,7 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 
 @pytest.mark.parametrize("tool_func_name,api_method_attr", WIFI_TOOLS)
 def test_tool_error_path(tool_func_name, api_method_attr):
-    with patch.object(wifi_module, "_make_api") as mock_make_api:
-        mock_client = _mock_client_with_exception(ConnectionError)
-        mock_make_api.return_value = mock_client
-
+    with _apply_error_path(ConnectionError):
         fn = getattr(wifi_module, tool_func_name)
         result = fn()
 

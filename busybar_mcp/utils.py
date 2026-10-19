@@ -4,9 +4,14 @@ from .client import BusyBarClient
 from .config import Settings
 
 
+def _client():
+    """Create a shared SDK client using the validated environment settings."""
+    return BusyBarClient(Settings.from_env())
+
+
 def _make_api(cls):
     """Create an SDK API instance using the validated environment settings."""
-    return BusyBarClient(Settings.from_env()).api(cls)
+    return _client().api(cls)
 
 
 def _serialize(obj):

@@ -12,10 +12,10 @@ import busybar_mcp.ble as ble_module
 # ---------------------------------------------------------------------------
 
 BLE_TOOLS = [
-    ("get_ble_status", "api_ble_status_get"),
-    ("enable_ble", "api_ble_enable_post"),
-    ("disable_ble", "api_ble_disable_post"),
-    ("remove_ble_pairing", "api_ble_pairing_delete"),
+    ("get_ble_status", "busybar_ble_status_get"),
+    ("enable_ble", "busybar_ble_enable_post"),
+    ("disable_ble", "busybar_ble_disable_post"),
+    ("remove_ble_pairing", "busybar_ble_pairing_delete"),
 ]
 
 
