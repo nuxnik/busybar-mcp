@@ -66,14 +66,21 @@ jobs:
         run: |
           set -euo pipefail
           TAG="v${{ steps.sync.outputs.target_version }}"
-          if git ls-remote --tags origin | grep -Fq "refs/tags/${TAG}$"; then
+          # NB: no '-q' on grep and no 'set -e' pitfall: grep must read the full
+          # ls-remote output, otherwise early exit + pipefail/SIGPIPE would make
+          # a *matching* (tag exists) pipeline report failure.
+          if git ls-remote --tags origin | grep -F "refs/tags/${TAG}$" >/dev/null; then
             echo "Tag ${TAG} already exists — this version was already published; skipping tag and publish."
             echo "first_publish=false" >> "$GITHUB_OUTPUT"
-          else
-            git tag "${TAG}"
+          elif git tag "${TAG}" 2>/dev/null; then
             git push origin "refs/tags/${TAG}"
             echo "Created tag ${TAG}."
             echo "first_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            # Tag already present locally (fetched by checkout) but not seen in
+            # the remote listing (e.g. pushed concurrently) — treat as published.
+            echo "Tag ${TAG} already exists locally; skipping tag and publish."
+            echo "first_publish=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build distribution (sdist + wheel)
