@@ -11,12 +11,15 @@ import busybar_mcp.settings as settings_module
 # Helpers
 # ---------------------------------------------------------------------------
 
+# (tool function name, generated SDK method the tool invokes in SDK 27.5.1)
 SETTINGS_TOOLS = [
     ("get_http_access", "get_http_access"),
-    ("get_device_name", "busybar_name_get"),
+    ("get_device_name", "api_name_get"),
     ("get_display_brightness", "get_display_brightness"),
     ("get_audio_volume", "get_audio_volume"),
 ]
+
+_API_ATTRS = [api_attr for _, api_attr in SETTINGS_TOOLS]
 
 
 def _mock_model():
@@ -28,14 +31,14 @@ def _mock_model():
 def _mock_client_with_exception(exc_class=ConnectionError):
     client = MagicMock()
     side_effects = [exc_class("simulated connection failure")] * 4
-    for attr in ["get_http_access", "busybar_name_get", "get_display_brightness", "get_audio_volume"]:
+    for attr in _API_ATTRS:
         setattr(client, attr, MagicMock(side_effect=side_effects))
     return client
 
 
 def _mock_client_for_happy_path():
     client = MagicMock()
-    for attr in ["get_http_access", "busybar_name_get", "get_display_brightness", "get_audio_volume"]:
+    for attr in _API_ATTRS:
         setattr(client, attr, MagicMock(return_value=_mock_model()))
     return client
 
@@ -55,6 +58,7 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 
         assert isinstance(result, CallToolResult)
         assert result.is_error is False
+        getattr(mock_client, api_method_attr).assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -78,3 +82,4 @@ def test_tool_error_path(tool_func_name, api_method_attr):
         else:
             text = content_item["text"]
         assert text.startswith("Error:")
+        getattr(mock_client, api_method_attr).assert_called_once()

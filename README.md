@@ -17,7 +17,7 @@ Clone the repository and install dependencies:
 uv sync
 ```
 
-This creates a virtual environment and installs all packages declared in `pyproject.toml`, including `busybar-python-sdk` ≥ 27.5.0 (the device API client this server wraps).
+This creates a virtual environment and installs all packages declared in `pyproject.toml`, including `busybar-python-sdk` ≥ 27.5.1 from production PyPI.
 
 ## Configuration
 
@@ -25,7 +25,7 @@ The server supports configuration through either a `.env` file or environment va
 
 | Variable            | Description                                                                                                                                                         | Example                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; presented to the device as a Bearer `Authorization` header (per the `busybar-python-sdk` 27.5.0 client) | `my-super-secret-token` |
+| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; transmitted to the device as the `X-API-Token` header (per the `busybar-python-sdk` 27.5.1 generated `ApiKeyAuth` scheme — see Authentication below) | `my-super-secret-token` |
 | `BUSYBAR_BASE_URL`  | IP address or hostname of the Busy Bar device (a scheme-prefixed `http://…` / `https://…` value is also accepted)                                                   | `10.0.4.20`             |
 
 ### Using `.env`
@@ -168,7 +168,7 @@ Once started, clients can connect to the server using their MCP transport.
 | `get_update_changelog`          | Retrieve release notes for a specific firmware version (accepts required version argument)                                          |
 | `get_autoupdate_settings`       | Get automatic update configuration (enabled, window start/end)                                                                      |
 | `get_wifi_status`               | Get Wi-Fi connection details (SSID, signal strength, channel, security)                                                             |
-| `get_wifi_networks`             | Retrieve scanned available Wi-Fi networks in range (local-only device endpoint — requires local-network reachability to the device) |
+| `get_wifi_networks`             | Retrieve scanned available Wi-Fi networks in range (generated `WiFiApi.get_wifi_networks()` SDK call, GET /api/wifi/networks) |
 
 ### Input tools
 
@@ -261,7 +261,7 @@ Releases are automated by the GitHub Actions pipeline (`.github/workflows/publis
 
 1. `pyproject.toml` metadata is synchronized (repository URL, testpypi index) via `scripts/sync_metadata.py`.
 2. The project version is aligned with the `busybar-python-sdk` version (the first `X.Y.Z` token in its dependency specifier).
-3. The updated commit is tagged `v<version>` (e.g., `v27.5.0`).
+3. The updated commit is tagged `v<version>` (e.g., `v27.5.1`).
 4. The package is built with `uv build` (sdist + wheel).
 5. On success the artifacts are published to **test.pypi.org** via `uv publish --index testpypi` (never pypi.org).
 

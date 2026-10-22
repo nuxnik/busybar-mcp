@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,44 +11,64 @@ import busybar_mcp.wifi as wifi_module
 # Helpers
 # ---------------------------------------------------------------------------
 
+# (tool function name, generated WiFiApi method the tool invokes in SDK 27.5.1).
+# Both tools are generated SDK calls again (SDK 27.5.1 re-added
+# `WiFiApi.get_wifi_networks`; the retired `BusyBarClient.get_raw` workaround
+# is gone), so both are driven through the shared `_make_api(WiFiApi)`.
 WIFI_TOOLS = [
-    ("get_wifi_status", "busybar_wifi_status_get"),
-    ("get_wifi_networks", "get_raw"),
+    ("get_wifi_status", "api_wifi_status_get"),
+    ("get_wifi_networks", "get_wifi_networks"),
 ]
 
-# A NetworkResponse-shaped body: `get_wifi_networks` validates the dict
-# returned by `BusyBarClient.get_raw` with the real `NetworkResponse` model.
-NETWORKS_BODY = {
-    "count": 1,
-    "networks": [
-        {"ssid": "TestNetwork", "security": "WPA3", "rssi": -58},
-    ],
-}
 
-
-def _mock_model():
+def _mock_model(body):
     m = MagicMock()
-    m.model_dump.return_value = {"_mock": True}
+    m.model_dump.return_value = body
     return m
 
 
-@contextmanager
-def _apply_happy_path():
-    with patch.object(wifi_module, "_make_api") as mock_make_api, \
-            patch.object(wifi_module, "_client") as mock_client:
-        mock_make_api.return_value.busybar_wifi_status_get.return_value = _mock_model()
-        mock_client.return_value.get_raw.return_value = NETWORKS_BODY
-        yield mock_make_api, mock_client
+# NetworkResponse-shaped model body for `WiFiApi.get_wifi_networks()`.
+_NETWORKS_RESPONSE = {
+    "count": 1,
+    "networks": [
+        {
+            "ssid": "TestNetwork",
+            "bssid": "AA:BB:CC:DD:EE:FF",
+            "rssi": -58,
+            "channel": 6,
+            "security": "WPA3",
+            "band": "2.4GHz",
+        },
+    ],
+}
+
+# StatusResponse-shaped model body for `WiFiApi.api_wifi_status_get()`.
+_STATUS_RESPONSE = {
+    "state": "connected",
+    "ssid": "TestNetwork",
+    "bssid": "AA:BB:CC:DD:EE:FF",
+    "channel": 6,
+    "rssi": -58,
+    "security": "WPA3",
+    "ip_config": {"method": "dhcp"},
+}
+
+_RESPONSE_BY_METHOD = {
+    "api_wifi_status_get": _STATUS_RESPONSE,
+    "get_wifi_networks": _NETWORKS_RESPONSE,
+}
 
 
-@contextmanager
-def _apply_error_path(exc_class=ConnectionError):
-    with patch.object(wifi_module, "_make_api") as mock_make_api, \
-            patch.object(wifi_module, "_client") as mock_client:
-        exc = exc_class("simulated connection failure")
-        mock_make_api.return_value.busybar_wifi_status_get.side_effect = exc
-        mock_client.return_value.get_raw.side_effect = exc
-        yield mock_make_api, mock_client
+def _mock_client_for_happy_path(api_method_attr):
+    client = MagicMock()
+    setattr(client, api_method_attr, MagicMock(return_value=_mock_model(_RESPONSE_BY_METHOD[api_method_attr])))
+    return client
+
+
+def _mock_client_with_exception(api_method_attr, exc_class=ConnectionError):
+    client = MagicMock()
+    setattr(client, api_method_attr, MagicMock(side_effect=exc_class("simulated connection failure")))
+    return client
 
 
 # ---------------------------------------------------------------------------
@@ -58,12 +77,17 @@ def _apply_error_path(exc_class=ConnectionError):
 
 @pytest.mark.parametrize("tool_func_name,api_method_attr", WIFI_TOOLS)
 def test_tool_happy_path(tool_func_name, api_method_attr):
-    with _apply_happy_path():
+    with patch.object(wifi_module, "_make_api") as mock_make_api:
+        mock_client = _mock_client_for_happy_path(api_method_attr)
+        mock_make_api.return_value = mock_client
+
         fn = getattr(wifi_module, tool_func_name)
         result = fn()
 
         assert isinstance(result, CallToolResult)
         assert result.is_error is False
+        # Non-vacuous: the tool called the exact 27.5.1 generated method.
+        getattr(mock_client, api_method_attr).assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +96,10 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 
 @pytest.mark.parametrize("tool_func_name,api_method_attr", WIFI_TOOLS)
 def test_tool_error_path(tool_func_name, api_method_attr):
-    with _apply_error_path(ConnectionError):
+    with patch.object(wifi_module, "_make_api") as mock_make_api:
+        mock_client = _mock_client_with_exception(api_method_attr, ConnectionError)
+        mock_make_api.return_value = mock_client
+
         fn = getattr(wifi_module, tool_func_name)
         result = fn()
 
@@ -84,3 +111,5 @@ def test_tool_error_path(tool_func_name, api_method_attr):
         else:
             text = content_item["text"]
         assert text.startswith("Error:")
+        # Non-vacuous: the failure was raised from the 27.5.1 generated method.
+        getattr(mock_client, api_method_attr).assert_called_once()

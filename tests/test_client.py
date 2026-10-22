@@ -22,8 +22,9 @@ def test_scheme_less_base_url_is_normalized_to_http():
         assert client.base_url == "http://10.0.4.20"
         kwargs = mock_configuration.call_args.kwargs
         assert kwargs["host"] == "http://10.0.4.20"
-        assert kwargs["access_token"] == "secret-token"
-        assert "api_key" not in kwargs
+        # The device token is wired through the generated `ApiKeyAuth` scheme
+        # (SDK 27.5.x sends it as the `X-API-Token` header).
+        assert kwargs["api_key"] == {"ApiKeyAuth": "secret-token"}
         mock_api_client.assert_called_once_with(configuration=mock_configuration.return_value)
 
 
@@ -37,14 +38,20 @@ def test_scheme_prefixed_base_url_is_left_as_is():
         assert kwargs["host"] == "https://my-bar.example.com"
 
 
-def test_api_token_is_passed_as_bearer_access_token():
+def test_api_token_is_wired_as_apikaut_api_key():
+    """Regression guard: the token must reach the SDK as `api_key['ApiKeyAuth']`.
+
+    On busybar_python_sdk 27.5.x, `Configuration(access_token=…)` produces NO
+    header at all (silently dropped by `auth_settings()`), so pinning the
+    `api_key` wiring is what actually transmits the device token as `X-API-Token`.
+    """
     with patch.object(client_module, "Configuration") as mock_configuration, \
             patch.object(client_module, "ApiClient"):
         client_module.BusyBarClient(_settings("http://10.0.4.20"))
 
         kwargs = mock_configuration.call_args.kwargs
-        assert kwargs["access_token"] == "secret-token"
-        assert "api_key" not in kwargs
+        assert kwargs["api_key"] == {"ApiKeyAuth": "secret-token"}
+        assert "access_token" not in kwargs
 
 
 def test_get_raw_raises_for_non_2xx_and_parses_json_body():
@@ -55,7 +62,7 @@ def test_get_raw_raises_for_non_2xx_and_parses_json_body():
         mock_call_api.return_value.status = 503
         mock_call_api.return_value.read.return_value = b"boom"
         try:
-            client.get_raw("/busybar/ble/status")
+            client.get_raw("/api/ble/status")
         except ValueError:
             pass
         else:
@@ -64,5 +71,5 @@ def test_get_raw_raises_for_non_2xx_and_parses_json_body():
         # 2xx JSON body is parsed and returned.
         mock_call_api.return_value.status = 200
         mock_call_api.return_value.read.return_value = b'{"count": 1}'
-        assert client.get_raw("/busybar/wifi/networks") == {"count": 1}
+        assert client.get_raw("/api/wifi/networks") == {"count": 1}
         mock_call_api.assert_called()

@@ -11,9 +11,10 @@ import busybar_mcp.smarthome as smarthome_module
 # Helpers
 # ---------------------------------------------------------------------------
 
+# (tool function name, generated SDK method the tool invokes in SDK 27.5.1)
 SMART_HOME_TOOLS = [
     ("get_smart_home_pairing_status", "get_smart_home_commissioning_status"),
-    ("get_smart_home_switch_state", "busybar_smart_home_switch_get"),
+    ("get_smart_home_switch_state", "api_smart_home_switch_get"),
 ]
 
 
@@ -26,14 +27,14 @@ def _mock_model():
 def _mock_client_with_exception(exc_class=ConnectionError):
     client = MagicMock()
     side_effects = [exc_class("simulated connection failure")] * 2
-    for attr in ["get_smart_home_commissioning_status", "busybar_smart_home_switch_get"]:
+    for attr in ["get_smart_home_commissioning_status", "api_smart_home_switch_get"]:
         setattr(client, attr, MagicMock(side_effect=side_effects))
     return client
 
 
 def _mock_client_for_happy_path():
     client = MagicMock()
-    for attr in ["get_smart_home_commissioning_status", "busybar_smart_home_switch_get"]:
+    for attr in ["get_smart_home_commissioning_status", "api_smart_home_switch_get"]:
         setattr(client, attr, MagicMock(return_value=_mock_model()))
     return client
 
@@ -53,6 +54,7 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 
         assert isinstance(result, CallToolResult)
         assert result.is_error is False
+        getattr(mock_client, api_method_attr).assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -76,3 +78,4 @@ def test_tool_error_path(tool_func_name, api_method_attr):
         else:
             text = content_item["text"]
         assert text.startswith("Error:")
+        getattr(mock_client, api_method_attr).assert_called_once()

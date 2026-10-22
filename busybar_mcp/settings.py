@@ -31,7 +31,7 @@ def get_http_access():
 def get_device_name():
     """Retrieve the device name configured on the Busy Bar device.
 
-    This tool queries GET /busybar/name via `SettingsApi.busybar_name_get()` to obtain
+    This tool queries GET /api/name via `SettingsApi.api_name_get()` to obtain
     the human-readable name currently set for this unit.
 
     Returns a NameInfo object containing:
@@ -43,7 +43,7 @@ def get_device_name():
     """
     try:
         api = _make_api(SettingsApi)
-        result = api.busybar_name_get()
+        result = api.api_name_get()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get device name: {e}")

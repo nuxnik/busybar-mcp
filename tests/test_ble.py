@@ -11,11 +11,12 @@ import busybar_mcp.ble as ble_module
 # Helpers
 # ---------------------------------------------------------------------------
 
+# (tool function name, generated SDK method the tool invokes in SDK 27.5.1)
 BLE_TOOLS = [
-    ("get_ble_status", "busybar_ble_status_get"),
-    ("enable_ble", "busybar_ble_enable_post"),
-    ("disable_ble", "busybar_ble_disable_post"),
-    ("remove_ble_pairing", "busybar_ble_pairing_delete"),
+    ("get_ble_status", "api_ble_status_get"),
+    ("enable_ble", "api_ble_enable_post"),
+    ("disable_ble", "api_ble_disable_post"),
+    ("remove_ble_pairing", "api_ble_pairing_delete"),
 ]
 
 
@@ -53,6 +54,8 @@ def test_tool_happy_path(tool_func_name, api_method_attr):
 
         assert isinstance(result, CallToolResult)
         assert result.is_error is False
+        # Non-vacuous: the tool called the exact 27.5.1 generated method name.
+        getattr(mock_client, api_method_attr).assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -76,3 +79,5 @@ def test_tool_error_path(tool_func_name, api_method_attr):
         else:
             text = content_item["text"]
         assert text.startswith("Error:")
+        # Non-vacuous: the failure was raised from the 27.5.1 generated method.
+        getattr(mock_client, api_method_attr).assert_called_once()

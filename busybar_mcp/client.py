@@ -27,7 +27,12 @@ class BusyBarClient:
         self._api_client = ApiClient(
             configuration=Configuration(
                 host=self.base_url,
-                access_token=settings.api_token,
+                # busybar_python_sdk 27.5.x transmits the device token as an
+                # `X-API-Token` header via the generated `ApiKeyAuth` scheme.
+                # `Configuration(access_token=…)` is silently dropped by 27.5.x
+                # `Configuration.auth_settings()` (it would send no header at
+                # all), so the token MUST be wired through `api_key`.
+                api_key={"ApiKeyAuth": settings.api_token},
             )
         )
 

@@ -1,14 +1,14 @@
-from busybar_python_sdk import NetworkResponse, WiFiApi
+from busybar_python_sdk import WiFiApi
 from mcp.types import CallToolResult
 
 from ._server import server
-from .utils import _client, _make_api, _serialize, _wrap_tool_error
+from .utils import _make_api, _wrap_tool_error
 
 @server.tool(name="get_wifi_status")
 def get_wifi_status():
     """Retrieve Wi-Fi connection status from the Busy Bar device.
 
-    This tool queries GET /busybar/wifi/status via `WiFiApi.busybar_wifi_status_get()` to obtain
+    This tool queries GET /api/wifi/status via `WiFiApi.api_wifi_status_get()` to obtain
     the current network connection details on the Wi-Fi interface.
 
     Returns a StatusResponse object containing:
@@ -27,7 +27,7 @@ def get_wifi_status():
     """
     try:
         api = _make_api(WiFiApi)
-        result = api.busybar_wifi_status_get()
+        result = api.api_wifi_status_get()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get Wi-Fi status: {e}")
@@ -37,11 +37,8 @@ def get_wifi_status():
 def get_wifi_networks():
     """Retrieve currently scanned Wi-Fi networks from the Busy Bar device.
 
-    This tool queries the local-only endpoint GET /busybar/wifi/networks via the shared
-    `BusyBarClient.get_raw()` helper (the generated `WiFiApi` omits this endpoint in
-    SDK 27.5.0) to obtain the latest scan results of available wireless access points in
-    range. The endpoint is only available while the MCP process can reach the device's
-    local API, so local-network reachability to the device is required.
+    This tool queries GET /api/wifi/networks via `WiFiApi.get_wifi_networks()` to obtain
+    the latest scan results of available wireless access points in range.
 
     Returns a NetworkResponse object containing:
         - count (int): Number of networks found in the scan
@@ -53,8 +50,8 @@ def get_wifi_networks():
         access point or confirming signal quality at a new location.
     """
     try:
-        body = _client().get_raw("/busybar/wifi/networks")
-        result = NetworkResponse.model_validate(body)
+        api = _make_api(WiFiApi)
+        result = api.get_wifi_networks()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get Wi-Fi networks: {e}")

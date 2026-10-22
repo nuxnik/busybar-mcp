@@ -8,7 +8,7 @@ from .utils import _make_api, _serialize, _wrap_tool_error
 def get_ble_status():
     """Retrieve BLE module status from the Busy Bar device.
 
-    This tool queries GET /busybar/ble/status via `BLEApi.busybar_ble_status_get()` to return
+    This tool queries GET /api/ble/status via `BLEApi.api_ble_status_get()` to return
     the current Bluetooth Low Energy module state.
 
     Returns a BleStatusResponse object containing:
@@ -21,7 +21,7 @@ def get_ble_status():
     """
     try:
         api = _make_api(BLEApi)
-        result = api.busybar_ble_status_get()
+        result = api.api_ble_status_get()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to get BLE status: {e}")
@@ -30,7 +30,7 @@ def get_ble_status():
 def enable_ble():
     """Enable the BLE module and start advertising.
 
-    Issues POST /busybar/ble/enable via `BLEApi.busybar_ble_enable_post()` to turn on
+    Issues POST /api/ble/enable via `BLEApi.api_ble_enable_post()` to turn on
     Bluetooth Low Energy and begin broadcasting.
 
     Use case:
@@ -38,7 +38,7 @@ def enable_ble():
     """
     try:
         api = _make_api(BLEApi)
-        result = api.busybar_ble_enable_post()
+        result = api.api_ble_enable_post()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to enable BLE: {e}")
@@ -47,7 +47,7 @@ def enable_ble():
 def disable_ble():
     """Disable the BLE module and stop advertising.
 
-    Issues POST /busybar/ble/disable via `BLEApi.busybar_ble_disable_post()` to turn off
+    Issues POST /api/ble/disable via `BLEApi.api_ble_disable_post()` to turn off
     Bluetooth Low Energy and cease broadcasting.
 
     Use case:
@@ -55,7 +55,7 @@ def disable_ble():
     """
     try:
         api = _make_api(BLEApi)
-        result = api.busybar_ble_disable_post()
+        result = api.api_ble_disable_post()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to disable BLE: {e}")
@@ -64,7 +64,7 @@ def disable_ble():
 def remove_ble_pairing():
     """Remove the current BLE pairing so the device becomes discoverable again.
 
-    Issues DELETE /busybar/ble/pairing via `BLEApi.busybar_ble_pairing_delete()` to
+    Issues DELETE /api/ble/pairing via `BLEApi.api_ble_pairing_delete()` to
     clear the existing Bluetooth pairing bond.
 
     Use case:
@@ -72,7 +72,7 @@ def remove_ble_pairing():
     """
     try:
         api = _make_api(BLEApi)
-        result = api.busybar_ble_pairing_delete()
+        result = api.api_ble_pairing_delete()
         return CallToolResult(content=[{"type": "text", "text": str(result.model_dump())}])
     except Exception as e:
         return _wrap_tool_error(f"Failed to remove BLE pairing: {e}")
