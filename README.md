@@ -79,13 +79,41 @@ BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 uvx busybar-mcp
 # Or install locally and run the console script
 uv sync
 BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 busybar-mcp
-
-# Development (inspecting/debugging the server with the MCP Inspector)
-uv sync
-BUSYBAR_API_TOKEN=… BUSYBAR_BASE_URL=10.0.4.20 uv run mcp dev --with-editable . mcp_entry.py:server
 ```
 
-`mcp_entry.py` is a dev-only entry helper for use with `mcp dev` / the MCP Inspector: it loads `.env` (same precedence as the production entry point) and registers all tools on the `server` object, but is **not** a standalone server launcher. Production entry points remain `busybar-mcp`, `uvx busybar-mcp`, and `python -m busybar_mcp` (equivalent to the console script).
+### Local development and device testing with MCP Inspector
+
+For local development, the Inspector needs to launch the installed `busybar-mcp` console script from the project environment. This ensures it uses the project's installed dependencies and loads `.env` from the project root.
+
+1. Install the project dependencies:
+
+   ```sh
+   uv sync
+   ```
+
+2. Create a `.env` file in the project root using the variables documented above. Do not commit this file; it contains your device token.
+
+3. Start the Inspector in one terminal:
+
+   ```sh
+   npm exec --yes --package=@modelcontextprotocol/inspector -- mcp-inspector
+   ```
+
+   Leave that terminal running and open the local URL it prints.
+
+4. In the Inspector, select **STDIO** and configure:
+
+   - **Command:** the absolute path to this checkout's `.venv/bin/busybar-mcp`
+   - **Arguments:** leave empty
+   - **Working directory:** the absolute path to this repository's root directory
+
+   Use the project's own virtual environment and working directory. The server loads `.env` automatically; you do not need to enter `BUSYBAR_API_TOKEN` or `BUSYBAR_BASE_URL` in the Inspector when `.env` is configured.
+
+5. Click **Connect**, open **Tools**, and call a read-only device tool such as `get_transport` or `get_timezone` to verify connectivity. Tools that change device settings or send input events should only be used when you intend to make that change.
+
+**Troubleshooting:** if `mcp dev` fails with `inspector: command not found`, use the manual Inspector workflow above. If the Inspector cannot connect, verify the command points to `.venv/bin/busybar-mcp`, the working directory is the project root, `.env` contains both required values, and the device is reachable from this machine.
+
+`mcp_entry.py` is a dev-only entry helper for `mcp dev` / the MCP Inspector: it loads `.env` and registers tools on the server object, but is **not** a standalone server launcher. The regular `mcp dev` path may start a separate environment; for validating the locally installed SDK and dependencies, use the Inspector configuration above.
 
 Once started, clients can connect to the server using their MCP transport.
 
