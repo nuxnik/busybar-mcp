@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BUSY Bar HTTP API
   description: HTTP API for BUSY Bar web server
-  version: 27.5.0
+  version: 27.14.0
   contact:
     name: tbd
 
@@ -125,6 +125,374 @@ paths:
                 $ref: "#/components/schemas/SuccessResponse"
         "400":
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps/stage:
+    post:
+      tags:
+        - Apps
+      summary: Stage a JavaScript application for installation
+      description:
+        Uploads an application package (TGZ or TAR file) and initiates the
+        installation process.
+      x-local-only: true
+      operationId: stageApp
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: JavaScript application TGZ package.
+      responses:
+        "200":
+          description: Application staged successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppStageResult"
+        "400":
+          description:
+            Invalid parameters, invalid package file, or installation preparation
+            failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description:
+            API version required by the application is not compatible with
+            the firmware.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Application package too large.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "508":
+          description: Failed to save the application package.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps/install:
+    post:
+      tags:
+        - Apps
+      summary: Install a staged JavaScript application
+      description: Installs a staged JavaScript application using the installation key
+      x-local-only: true
+      operationId: installApp
+      parameters:
+        - name: install_key
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Installation key
+          example: 123456789
+      responses:
+        "200":
+          description: Application installed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps/launch:
+    post:
+      tags:
+        - Apps
+      summary: Launch an installed JavaScript application
+      description: Launches an installed JavaScript application by its id
+      x-local-only: true
+      operationId: launchApp
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AppId"
+      responses:
+        "200":
+          description: Application launched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: App with given ID was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Missing or invalid application id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: A higher-priority application is already running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Failed to launch the application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps/quit:
+    post:
+      tags:
+        - Apps
+      summary: Quit from a running JavaScript application
+      description: Quits from a running JavaScript application, if there is one
+      x-local-only: true
+      operationId: quitApp
+      responses:
+        "200":
+          description: Exited from the application successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "409":
+          description: Application is not running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Failed to quit from the application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps:
+    delete:
+      tags:
+        - Apps
+      summary: Delete a JavaScript application
+      description: Removes an installed JavaScript application, keeping its settings
+      x-local-only: true
+      operationId: removeApp
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AppId"
+      responses:
+        "200":
+          description: Done successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: App with given ID was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Missing application id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description:
+            "Failed to quit from the application that needs to be uninstalled.
+
+            "
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/apps/list:
+    get:
+      tags:
+        - Apps
+      summary: List installed JavaScript applications
+      description: Lists installed JavaScript applications
+      x-local-only: true
+      operationId: listApps
+      responses:
+        "200":
+          description: Done successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppListResult"
+  /api/apps/settings:
+    description: "Settings document of a JavaScript application.
+
+      "
+    get:
+      tags:
+        - Apps
+      summary: Get application settings
+      description:
+        "Returns the complete settings document; the first request materializes
+        it from the schema defaults.
+
+        "
+      x-local-only: true
+      operationId: getAppSettings
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AppId"
+      responses:
+        "200":
+          description: Settings document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettingsDocument"
+        "400":
+          description: Invalid app_id parameter value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Requested application id does not match running application id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown or invalid application, or no settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Invalid settings schema or failed to build the document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "508":
+          description: Storage error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags:
+        - Apps
+      summary: Set application settings
+      description:
+        "Replaces the settings document: every field must be present and
+        valid, with a version matching the application settings; unknown keys are dropped.
+
+        "
+      x-local-only: true
+      operationId: setAppSettings
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AppId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsDocument"
+      responses:
+        "200":
+          description: Settings stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid app_id parameter value or invalid document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown or invalid application, or no settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Invalid settings schema
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "508":
+          description: Storage error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+        - Apps
+      summary: Reset application settings
+      description: Resets every field to its schema default.
+      x-local-only: true
+      operationId: resetAppSettings
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AppId"
+      responses:
+        "200":
+          description: Settings reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid app_id parameter value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown or invalid application, or no settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Invalid settings schema
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "508":
+          description: Storage error
           content:
             application/json:
               schema:
@@ -419,6 +787,7 @@ paths:
     get:
       tags:
         - BLE
+      summary: Get BLE status
       description: Returns current BLE status
       responses:
         "200":
@@ -642,6 +1011,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccessTokensInfo"
+        "403":
+          description: Request forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       tags:
         - Settings
@@ -663,6 +1038,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccessToken"
+        "400":
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Request forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
       tags:
         - Settings
@@ -676,6 +1063,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Request forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/access/tokens/{short_id}:
     delete:
       tags:
@@ -696,6 +1089,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Request forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Specified token not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/name:
     get:
       tags:
@@ -835,6 +1240,9 @@ paths:
       tags:
         - Smart Home
       summary: Smart home commissioning status
+      description:
+        Retrieves the number of commissioned fabrics and the latest smart
+        home pairing status
       operationId: getSmartHomeCommissioningStatus
       parameters: []
       responses:
@@ -848,6 +1256,9 @@ paths:
       tags:
         - Smart Home
       summary: Link device to a smart home
+      description:
+        Starts the commissioning process and returns onboarding data like
+        QR code and manual pairing code to link the device with a smart home system
       operationId: startSmartHomePairing
       parameters: []
       responses:
@@ -867,6 +1278,9 @@ paths:
       tags:
         - Smart Home
       summary: Erase all smart home links
+      description:
+        Removes all existing smart home pairings (fabrics) and automatically
+        reboots the device to apply the reset
       parameters: []
       responses:
         "200":
@@ -888,6 +1302,7 @@ paths:
       tags:
         - Smart Home
       summary: Get state of emulated smart home switch
+      description: Returns the current state of the virtual switch emulated by the device
       parameters: []
       responses:
         "200":
@@ -906,6 +1321,9 @@ paths:
       tags:
         - Smart Home
       summary: Set state of emulated smart home switch
+      description:
+        Updates the current state and/or startup mode of the emulated smart
+        home switch
       parameters: []
       requestBody:
         required: true
@@ -1023,6 +1441,9 @@ paths:
       tags:
         - Storage
       summary: List files on internal storage
+      description:
+        Returns a list of all files and directories located inside the specified
+        storage path
       operationId: listStorageFiles
       parameters:
         - name: path
@@ -1146,6 +1567,9 @@ paths:
       tags:
         - Storage
       summary: Show storage usage
+      description:
+        Retrieves information about storage partition capacity, including
+        total, used, and free space in bytes
       operationId: getStorageStatus
       responses:
         "200":
@@ -1189,6 +1613,9 @@ paths:
       tags:
         - Streaming
       summary: Get single frame for requested screen
+      description:
+        Captures and returns a single static image frame of the specified
+        display (Front or Back)
       parameters:
         - name: display
           in: query
@@ -1765,7 +2192,10 @@ paths:
     get:
       tags:
         - Wi-Fi
-      description: Returns current Wi-Fi status
+      summary: Get Wi-Fi connection status
+      description:
+        Returns the current connection state of the Wi-Fi module, along with
+        network details like SSID, RSSI, and IP address if connected
       parameters: []
       responses:
         "200":
@@ -1843,7 +2273,10 @@ paths:
       tags:
         - Wi-Fi
       operationId: getWifiNetworks
-      description: Scans environment for available Wi-Fi networks
+      summary: Scan for available Wi-Fi networks
+      description:
+        Scans to discover nearby available Wi-Fi networks and returns their
+        SSIDs, security styles, and signal strengths
       x-local-only: true
       parameters: []
       responses:
@@ -1961,6 +2394,101 @@ components:
         - server_url
         - client_cert_type
         - ignore_server_cert
+    AppId:
+      type: string
+      pattern: ^[a-zA-Z0-9_\-][a-zA-Z0-9_\-.]{0,31}$
+      description: JavaScript application id
+      example: app.author.example_app
+    AppStageResult:
+      type: object
+      properties:
+        result:
+          type: string
+          description: Operation result
+          example: OK
+        install_key:
+          type: integer
+          description: Single-use installation key
+          example: 123456789
+        staged:
+          $ref: "#/components/schemas/AppInfo"
+          description: Staged application info
+        installed:
+          $ref: "#/components/schemas/AppInfo"
+          description: If an application with the same ID is already installed, its info
+      required:
+        - result
+        - install_key
+        - staged
+    AppInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Application ID
+          example: com.example.useful-app
+        name:
+          type: string
+          description: Human-readable application name
+          example: A Useful App
+        version:
+          type: string
+          description: Application version
+          example: 1.0.0
+        api_version:
+          type: string
+          description: Minimum required HTTP API version
+          example: 1.0.0
+        author:
+          type: string
+          description: Application author
+          example: Erika Mustermann
+        description:
+          type: string
+          description: Application description
+          example: An app to assist in my daily routine
+        icon_path:
+          type: string
+          description: Application icon path
+          example: /ext/apps_assets/shared/images/unknown_app_front_8x8.image
+        is_debug:
+          type: boolean
+          description: A flag indicating that this app only shows up in debug mode
+          example: false
+      required:
+        - id
+        - name
+        - version
+        - api_version
+        - author
+        - description
+        - icon_path
+        - is_debug
+    AppListResult:
+      type: object
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppInfo"
+      required:
+        - apps
+    AppSettingsDocument:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: Settings version of the application schema
+          example: 1
+        values:
+          type: object
+          description: Setting values keyed by field id, with groups as nested objects
+          additionalProperties: true
+          example:
+            volume: 5
+      required:
+        - version
+        - values
     ApplicationName:
       type: string
       maxLength: 32
@@ -2149,6 +2677,7 @@ components:
                 - large
                 - extra_large
                 - global
+                - superscript
             color:
               type: string
               description: "Color to display the text in, in #RRGGBBAA format"
@@ -3321,6 +3850,8 @@ components:
 tags:
   - name: Account
     description: Account linking and MQTT status
+  - name: Apps
+    description: JavaScript applications management
   - name: Assets
     description: Asset file management and display control
   - name: BLE
