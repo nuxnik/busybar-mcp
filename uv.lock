@@ -48,7 +48,7 @@ wheels = [
 
 [[package]]
 name = "busybar-mcp"
-version = "27.5.1"
+version = "27.14.0"
 source = { editable = "." }
 dependencies = [
     { name = "busybar-python-sdk" },
