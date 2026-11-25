@@ -17,7 +17,7 @@ Clone the repository and install dependencies:
 uv sync
 ```
 
-This creates a virtual environment and installs all packages declared in `pyproject.toml`, including `busybar-python-sdk` ≥ 27.14.0 from **production PyPI** (the default index — no index mapping or `--index` flags are required).
+This creates a virtual environment and installs all packages declared in `pyproject.toml`, including `busybar-python-sdk` ≥ 27.15.0 from **test.pypi.org** — the SDK is currently in its test phase and is not yet published on production PyPI. It is resolved through the `testpypi` index declared in `pyproject.toml` and the committed `[tool.uv.sources]` mapping, so no `--index` flags are required.
 
 ## Configuration
 
@@ -25,7 +25,7 @@ The server supports configuration through either a `.env` file or environment va
 
 | Variable            | Description                                                                                                                                                         | Example                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; transmitted to the device as the `X-API-Token` header (per the `busybar-python-sdk` 27.14.0 generated `ApiKeyAuth` scheme — see [Authentication](#authentication) below) | `my-super-secret-token` |
+| `BUSYBAR_API_TOKEN` | API auth token for authenticating with the Busy Bar device; transmitted to the device as the `X-API-Token` header (per the `busybar-python-sdk` 27.15.0 generated `ApiKeyAuth` scheme — see [Authentication](#authentication) below) | `my-super-secret-token` |
 | `BUSYBAR_BASE_URL`  | IP address or hostname of the Busy Bar device (a scheme-prefixed `http://…` / `https://…` value is also accepted)                                                   | `10.0.4.20`             |
 
 ### Using `.env`
@@ -70,9 +70,9 @@ then `10.0.4.30` is used.
 
 ### Authentication
 
-`BUSYBAR_API_TOKEN` is sent to the device as the `X-API-Token` header. It is wired through the `busybar-python-sdk` 27.14.x generated `ApiKeyAuth` scheme via `Configuration(api_key={'ApiKeyAuth': <token>})`.
+`BUSYBAR_API_TOKEN` is sent to the device as the `X-API-Token` header. It is wired through the `busybar-python-sdk` 27.15.x generated `ApiKeyAuth` scheme via `Configuration(api_key={'ApiKeyAuth': <token>})`.
 
-> **Gotcha:** the 27.14.x `Configuration.auth_settings()` **silently drops `access_token=…`** — it sends no header at all. The token MUST be passed through `Configuration(api_key={'ApiKeyAuth': …})`; passing it as `Configuration(access_token=…)` authenticates nothing. No new environment variable is required.
+> **Gotcha:** the 27.15.x `Configuration.auth_settings()` **silently drops `access_token=…`** — it sends no header at all. The token MUST be passed through `Configuration(api_key={'ApiKeyAuth': …})`; passing it as `Configuration(access_token=…)` authenticates nothing. No new environment variable is required.
 
 ## Usage
 
@@ -267,7 +267,7 @@ Releases are automated by the GitHub Actions pipeline (`.github/workflows/publis
 
 1. `pyproject.toml` metadata is synchronized (repository URL, testpypi index) via `scripts/sync_metadata.py`.
 2. The project version is aligned with the `busybar-python-sdk` version (the first `X.Y.Z` token in its dependency specifier).
-3. The updated commit is tagged `v<version>` (e.g., `v27.14.0`).
+3. The updated commit is tagged `v<version>` (e.g., `v27.15.0`).
 4. The package is built with `uv build` (sdist + wheel).
 5. On success the artifacts are published to **test.pypi.org** via `uv publish --index testpypi` (never pypi.org).
 

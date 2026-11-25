@@ -48,7 +48,7 @@ wheels = [
 
 [[package]]
 name = "busybar-mcp"
-version = "27.14.0"
+version = "27.15.0"
 source = { editable = "." }
 dependencies = [
     { name = "busybar-python-sdk" },
@@ -63,7 +63,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "busybar-python-sdk", specifier = ">=27.14.0" },
+    { name = "busybar-python-sdk", specifier = ">=27.15.0", index = "https://test.pypi.org/simple/" },
     { name = "mcp", extras = ["cli"], specifier = ">=2.0.0" },
 ]
 
@@ -75,17 +75,17 @@ dev = [
 
 [[package]]
 name = "busybar-python-sdk"
-version = "27.14.0"
-source = { registry = "https://pypi.org/simple" }
+version = "27.15.0"
+source = { registry = "https://test.pypi.org/simple/" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/02/4b05fcc856c29e0289e3125ca1d5e03ca24a575581cdd468b32aedcabced/busybar_python_sdk-27.14.0.tar.gz", hash = "sha256:c162b2cdee83dca5d078e205bf538c7c0631d5cfc1fe38869bc2e8fadb87fae5", size = 156944, upload-time = "2026-11-04T14:09:12.131Z" }
+sdist = { url = "https://test-files.pythonhosted.org/packages/c9/e6/173fc04e433572ab8eb97462292ecc2c6920f3511a0ed4226e77cbe2e692/busybar_python_sdk-27.15.0.tar.gz", hash = "sha256:08fd5f3ef8584cb761205f95ebcb70d6fbfee8cbfde55c9f08b0e50bb423a77a", size = 156994, upload-time = "2026-11-25T08:56:40.71Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/97/06e54ca84f97104cf2087a80996b9b6925210a898685b5bcc91774179cb3/busybar_python_sdk-27.14.0-py3-none-any.whl", hash = "sha256:e22771185f0c8d70cbb6c8577a57f77df7cf3ba2f53039bc1ddea6755367c2d4", size = 328422, upload-time = "2026-11-04T14:09:10.759Z" },
+    { url = "https://test-files.pythonhosted.org/packages/b8/3f/74f35363ba830df007c3eb74281511cee946106f10ac7f6c57ddd4e85909/busybar_python_sdk-27.15.0-py3-none-any.whl", hash = "sha256:2f0fba2aa04157652ba8147647987dc98fbe74e751353d33e1df1faffd6bb52d", size = 328426, upload-time = "2026-11-25T08:56:39.107Z" },
 ]
 
 [[package]]

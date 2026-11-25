@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "busybar-mcp"
-version = "27.14.0"
+version = "27.15.0"
 description = "An MCP server for the busy bar"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -14,7 +14,7 @@ authors = [
     {name = "nuxnik"},
 ]
 dependencies = [
-    "busybar-python-sdk>=27.14.0",
+    "busybar-python-sdk>=27.15.0",
     "mcp[cli]>=2.0.0",
 ]
 
@@ -32,6 +32,13 @@ dev = [
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+# busybar-python-sdk 27.15.0 is in its test phase and is published only on
+# Test PyPI. The mapping below pins the SDK to the explicit `testpypi` index
+# so `uv lock`/`uv sync`/`uv run` resolve it without manual `--index` flags.
+# Remove this block once the SDK is promoted to production PyPI.
+[tool.uv.sources]
+busybar-python-sdk = { index = "testpypi" }
 
 [[tool.uv.index]]
 name = "testpypi"
