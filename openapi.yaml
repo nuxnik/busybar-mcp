@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BUSY Bar HTTP API
   description: HTTP API for BUSY Bar web server
-  version: 27.15.0
+  version: 27.16.0
   contact:
     name: tbd
 
@@ -246,11 +246,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
         "409":
-          description: A higher-priority application is already running
+          description: "Application conflict. Possible causes:
+
+            - API version required by the application is not compatible with the firmware.
+
+            - A higher-priority application is already running.
+
+            "
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              examples:
+                versionIncompatible:
+                  summary: Incompatible API version
+                  value:
+                    message:
+                      API version required by the application is not compatible
+                      with the firmware
+                higherPriorityRunning:
+                  summary: Higher-priority app running
+                  value:
+                    message: A higher-priority application is already running
         "503":
           description: Failed to launch the application
           content:
@@ -656,6 +673,14 @@ paths:
                 $ref: "#/components/schemas/SuccessResponse"
         "400":
           description: Invalid deletion data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description:
+            Display is held by a higher-priority application; nothing was
+            cleared
           content:
             application/json:
               schema:
